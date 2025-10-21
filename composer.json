@@ -1,0 +1,28 @@
+{
+	"name": "wrd/wp-objective",
+	"version": "1.0.0",
+	"description": "A set of classes for building consistent WordPress plugins.",
+	"type": "library",
+	"license": "MIT",
+	"autoload": {
+		"psr-4": {
+			"Wrd\\WpObjective\\": "src/"
+		},
+		"files": [
+			"src/functions.php"
+		]
+	},
+	"authors": [
+		{
+			"name": "wrd-sodapixel",
+			"email": "dev@sodapixel.com"
+		}
+	],
+	"require": {
+		"php": "8.2"
+	},
+	"scripts": {
+		"doc-facades": "Wrd\\WpObjective\\Scripts\\Doc_Facades_Script::handle"
+	},
+	"minimum-stability": "stable"
+}
