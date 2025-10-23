@@ -195,12 +195,12 @@ class Container {
 	/**
 	 * Register a service provider.
 	 *
-	 * @param class-string<Service_Provider>[] ...$providers The provider.
+	 * @param class-string<Service_Provider> $provider The provider.
 	 *
 	 * @return void
 	 */
-	public function provide( array ...$providers ): void {
-		array_push( $this->providers[], ...$providers );
+	public function provide( $provider ): void {
+		$this->providers[] = $provider;
 	}
 
 	/**

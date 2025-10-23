@@ -7,6 +7,8 @@
 
 namespace Wrd\WpObjective\Http;
 
+use Wrd\WpObjective\Support\Collection;
+
 /**
  * Represents an HTTP request.
  */

@@ -8,87 +8,160 @@
 namespace Wrd\WpObjective\Database;
 
 use WP_Error;
+use Wrd\WpObjective\Database\Query\Query;
+use Wrd\WpObjective\Database\Schema\Blueprint;
+use Wrd\WpObjective\Database\Schema\Command;
 
 /**
  * Class for interactive with the database.
  */
 class Database_Manager {
 	/**
+	 * Run an SQL command. Contents are sanitized.
+	 *
+	 * @param string $sql The SQL command to run.
+	 *
+	 * @return WP_Error|true
+	 */
+	public function sql( string $sql ): WP_Error | true {
+		// TODO.
+		return true;
+	}
+
+	/**
+	 * Get the prefix for table names.
+	 *
+	 * @return string
+	 */
+	public function get_table_name_prefix(): string {
+		global $wpdb;
+
+		return $wpdb->prefix;
+	}
+
+	/**
+	 * Get the charset for tables.
+	 *
+	 * @return string
+	 */
+	public function get_charset_collate(): string {
+		global $wpdb;
+
+		return $wpdb->charset;
+	}
+
+	/**
 	 * Create a new database table.
+	 *
+	 * @param string                    $name The table name.
 	 *
 	 * @param callable(Blueprint): void $callback Callback to define the schema.
 	 *
 	 * @return WP_Error | true
 	 */
-	public function create_table( callable $callback ): WP_Error | true {
+	public function create_table( string $name, callable $callback ): WP_Error | true {
 		$schema = new Blueprint();
 
 		call_user_func( $callback, $schema );
 
-		$sql = $this->get_create_table_query( $schema );
+		$schema
+			->name( $this->get_table_name_prefix() . $name )
+			->charset_collate( $this->get_charset_collate() )
+			->command( Command::CREATE );
 
+		return $this->sql( $schema->get_sql() );
+	}
+
+	/**
+	 * Change a new database table.
+	 *
+	 * @param string                    $name The table name.
+	 *
+	 * @param callable(Blueprint): void $callback Callback to define the schema.
+	 *
+	 * @return WP_Error | true
+	 */
+	public function alter_table( string $name, callable $callback ): WP_Error | true {
+		$schema = new Blueprint();
+
+		call_user_func( $callback, $schema );
+
+		$schema
+			->name( $this->get_table_name_prefix() . $name )
+			->charset_collate( $this->get_charset_collate() )
+			->command( Command::ALTER );
+
+		return $this->sql( $schema->get_sql() );
+	}
+
+	/**
+	 * Rename a database table.
+	 *
+	 * @param string $old_name The original table name.
+	 *
+	 * @param string $new_name The new table name.
+	 *
+	 * @return WP_Error | true
+	 */
+	public function rename_table( string $old_name, string $new_name ): WP_Error | true {
+		$schema = ( new Blueprint() )
+			->name( $this->get_table_name_prefix() . $old_name )
+			->charset_collate( $this->get_charset_collate() )
+			->command( Command::RENAME )
+			->new_name( $new_name );
+
+		return $this->sql( $schema->get_sql() );
+	}
+
+	/**
+	 * Drop a database table.
+	 *
+	 * @param string $name The table name.
+	 *
+	 * @return WP_Error | true
+	 */
+	public function drop_table( string $name ): WP_Error | true {
+		$schema = ( new Blueprint() )
+			->name( $this->get_table_name_prefix() . $name )
+			->charset_collate( $this->get_charset_collate() )
+			->command( Command::DROP );
+
+		return $this->sql( $schema->get_sql( Command::DROP ) );
+	}
+
+	/**
+	 * Insert a row.
+	 *
+	 * @param string $table The table to query.
+	 *
+	 * @param array  $row The row to add.
+	 *
+	 * @return WP_Error|true
+	 */
+	public function insert( string $table, array $row ): WP_Error | true {
+		// TODO.
 		return true;
 	}
 
 	/**
-	 * Get the SQL query.
+	 * Begin a query.
 	 *
-	 * Suitable for dbDelta.
+	 * @param string $table The table to query.
 	 *
-	 * @param Blueprint $schema The table schema.
-	 *
-	 * @return string
+	 * @return Query
 	 */
-	private function get_create_table_query( Blueprint $schema ): string {
-		global $wpdb;
+	public function find( string $table ): Query {
+		return ( new Query( $this ) )->table( $table );
+	}
 
-		$table_name      = $wpdb->prefix . strtolower( $schema->name );
-		$charset_collate = $wpdb->get_charset_collate();
-
-		$definitions = array();
-
-		foreach ( $schema->columns as $column ) {
-			$column_name = strtolower( $column->name );
-			$type        = strtolower( $column->name );
-
-			$line = "{$column_name} {$type} (";
-
-			if ( $column->unsigned ) {
-				$line .= ' UNSIGNED';
-			}
-
-			if ( $column->default ) {
-				$line .= "DEFAULT '" . $column->default . "'";
-			}
-
-			if ( ! $column->nullable ) {
-				$line .= ' NOT NULL';
-			}
-
-			if ( ! $column->autoincrement ) {
-				$line .= ' AUTO_INCREMENT';
-			}
-
-			$definitions[] = $line;
-		}
-
-		foreach ( $schema->columns as $column ) {
-			$column_name = strtolower( $column->name );
-
-			if ( $column->unique ) {
-				$definitions[] = 'UNIQUE KEY ' . $column_name . ' (' . $column_name . ')';
-			}
-			if ( $column->unique ) {
-				$definitions[] = 'PRIMARY KEY  (' . $column_name . ')';
-			}
-		}
-
-		$sql = "CREATE TABLE {$table_name} (";
-
-		$sql .= PHP_EOL . join( ',' . PHP_EOL, $definitions );
-
-		$sql .= PHP_EOL . ") {$charset_collate};";
-
-		return $sql;
+	/**
+	 * Run a query.
+	 *
+	 * @param Query $query Query to run.
+	 *
+	 * @return WP_Error|true
+	 */
+	public function run_query( Query $query ): WP_Error | true {
+		return $this->sql( $query->to_sql() );
 	}
 }

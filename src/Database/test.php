@@ -7,8 +7,10 @@
 
 namespace Wrd\WpObjective\Foundation\Migrate;
 
-use Wrd\WpObjective\Database\Blueprint;
-use Wrd\WpObjective\Database\Column_Definition;
+use Wrd\WpObjective\Database\Query\Query;
+use Wrd\WpObjective\Database\Query\Where_Group;
+use Wrd\WpObjective\Database\Schema\Blueprint;
+use Wrd\WpObjective\Support\Facades\Database;
 
 /**
  * Represents a migration.
@@ -31,37 +33,36 @@ class My_Migration extends Migration {
 	 * @return void
 	 */
 	public function up(): void {
-		// TODO: Facades?
-
 		// Create a table.
-		Database::create(
+		Database::create_table(
+			'products',
 			function( Blueprint $table ) {
-				$table->name( 'products' );
 				$table->id( 'id' );
 				$table->text( 'title' );
 			}
 		);
 
 		// Alter a table.
-		Database::alter(
-			'products' function( Blueprint $table ) {
-				$table->add_column()->text( 'colour' );
+		Database::alter_table(
+			'products',
+			function( Blueprint $table ) {
+				$table->text( 'colour' );
 
-				$table->alter_column()->decimal( 'price', 16, 2 );
+				$table->alter( 'colour' )->decimal( 'price', 16, 2 );
 
-				$table->rename_column( 'title', 'product_title' );
+				$table->rename( 'title', 'product_title' );
 
-				$table->drop_column( 'stock' );
+				$table->drop( 'stock' );
 			}
 		);
 
-		Database::rename( 'products', 'product' );
+		Database::rename_table( 'products', 'product' );
 
 		// Drop a table.
-		Database::drop( 'products' );
+		Database::drop_table( 'products' );
 
 		// Query the rows.
-		$rows_collection = Database::query( 'products' )->where( 'id', '>=', '19' )->get();
+		$rows_collection = Database::find( 'products' )->where( 'id', '>=', '19' )->get();
 
 		// Create a row.
 		$row = Database::insert(
@@ -81,14 +82,30 @@ class My_Migration extends Migration {
 		// Delete a row.
 		$row->delete();
 
+		Database::find( 'products' )
+			->where( 'votes', '>', 100 )
+			->or_where(
+				function( Query $query ) {
+					$query
+					->where( 'name', '=', 'Abigail' )
+					->where( 'votes', '>', 50 );
+				}
+			)
+			->order_by( 'id', 'ASC' )
+			->limit( 50 )
+			->offset( 12 )
+			->get();
+
+		// SELECT * FROM users WHERE votes > 100 OR (name = 'Abigail' and votes > 50) ORDER BY id ASC LIMIT 50 OFFSET 12.
+
 		// Bulk update rows without querying.
-		Database::query( 'products' )->where( 'id', '>=', '19' )->update(
+		Database::find( 'products' )->where( 'id', '>=', '19' )->update(
 			array(
 				'title' => 'Untitled Product',
 			)
 		);
 
 		// Delete a row without querying.
-		Database::query( 'products' )->where( 'id', '>=', '19' )->delete();
+		Database::find( 'products' )->where( 'id', '>=', '19' )->delete();
 	}
 }

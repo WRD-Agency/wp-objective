@@ -285,7 +285,7 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	 *
 	 * @return Collection<TValue>
 	 */
-	public static function from( ?array $elements ): static {
+	public static function from( ?array $elements = array() ): static {
 		return new static( $elements );
 	}
 
