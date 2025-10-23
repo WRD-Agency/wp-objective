@@ -19,7 +19,7 @@
 		}
 	],
 	"require": {
-		"php": "8.2"
+		"php": ">=8.2"
 	},
 	"scripts": {
 		"doc-facades": "Wrd\\WpObjective\\Scripts\\Doc_Facades_Script::handle"
