@@ -48,7 +48,7 @@ abstract class Facade {
 			return static::$mock;
 		}
 
-		return static::$container->resolve( static::get_facade_accessor() );
+		return static::$container->get( static::get_facade_accessor() );
 	}
 
 	/**

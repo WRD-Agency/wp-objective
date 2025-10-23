@@ -31,7 +31,7 @@ class Container {
 	/**
 	 * The service providers for the container.
 	 *
-	 * @var class-string<Service_Provider>[]
+	 * @var (class-string<Service_Provider>|Service_Provider)[]
 	 */
 	protected array $providers = array();
 
@@ -116,7 +116,7 @@ class Container {
 		if ( ! array_key_exists( $id, $this->bindings ) ) {
 			// If the ID is a valid class name, try and resolve it as a fallback.
 			if ( class_exists( $id ) ) {
-				return $this->resolve( $id );
+				return $this->resolve_class_name( $id );
 			}
 
 			// ID not found.
@@ -131,11 +131,11 @@ class Container {
 		}
 
 		// A class name is stored, resolve it.
-		return $this->resolve( $concrete );
+		return $this->resolve_class_name( $concrete );
 	}
 
 	/**
-	 * Resolves a binding.
+	 * Resolves a binding from a class string into a object with dependencies injected.
 	 *
 	 * @template TObject
 	 *
@@ -145,7 +145,7 @@ class Container {
 	 *
 	 * @throws Exception If the class cannot be resolved.
 	 */
-	public function resolve( $concrete ) {
+	public function resolve_class_name( $concrete ) {
 		if ( ! class_exists( $concrete ) ) {
 			throw new Exception( "The '$concrete' class does not exist and cannot be resolved." );
 		}
@@ -195,7 +195,7 @@ class Container {
 	/**
 	 * Register a service provider.
 	 *
-	 * @param class-string<Service_Provider> $provider The provider.
+	 * @param class-string<Service_Provider>|Service_Provider $provider The provider.
 	 *
 	 * @return void
 	 */
@@ -206,7 +206,7 @@ class Container {
 	/**
 	 * Check if a class inherits from Service_Provider and if it does, add it as a provider.
 	 *
-	 * @param class-string $provider The object class to possible add.
+	 * @param class-string|Service_Provider $provider The object class to possible add.
 	 *
 	 * @return bool
 	 */
@@ -231,9 +231,11 @@ class Container {
 
 		$this->hit_providers( 'boot' );
 
-		register_activation_hook( $this, array( $this, 'activate' ) );
-		register_deactivation_hook( $this, array( $this, 'deactive' ) );
-		register_uninstall_hook( $this, array( $this, 'uninstall' ) );
+		$plugin = $this->get( Plugin::class );
+
+		register_activation_hook( $plugin->file(), array( $this, 'activate' ) );
+		register_deactivation_hook( $plugin->file(), array( $this, 'deactive' ) );
+		register_uninstall_hook( $plugin->file(), array( $this, 'uninstall' ) );
 
 		add_action( 'init', array( $this, 'init' ), PHP_INT_MIN, 0 );
 		add_action( 'shutdown', array( $this, 'shutdown' ), PHP_INT_MAX, 0 );
@@ -248,8 +250,11 @@ class Container {
 	 */
 	public function hit_providers( string $method ): void {
 		foreach ( $this->providers as $concrete ) {
-			$provider = $this->resolve( $concrete );
-			$provider->{$method}();
+			if ( is_string( $concrete ) ) {
+				$concrete = $this->get( $concrete );
+			}
+
+			$concrete->{$method}();
 		}
 	}
 

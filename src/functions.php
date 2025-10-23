@@ -42,7 +42,7 @@ function config( array $config ): Container {
 	}
 
 	foreach ( $migrations as $migration ) {
-		$container->resolve( Migration_Manager::class )->add_migration( $migration );
+		$container->get( Migration_Manager::class )->add_migration( $migration );
 	}
 
 	return $container;
