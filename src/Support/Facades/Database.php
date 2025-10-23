@@ -26,7 +26,7 @@ use Wrd\WpObjective\Database\Database_Manager;
  *
  * @see Wrd\WpObjective\Database\Database_Manager
  */
-class Database {
+class Database extends Facade {
 	/**
 	 * Get the ID to grab the object from the Database.
 	 *

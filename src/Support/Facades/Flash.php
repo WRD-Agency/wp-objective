@@ -31,7 +31,7 @@ use Wrd\WpObjective\Admin\Flash_Manager;
  *
  * @see Wrd\WpObjective\Admin\Flash_Manager
  */
-class Flash {
+class Flash extends Facade {
 	/**
 	 * Get the ID to grab the object from the Flash.
 	 *

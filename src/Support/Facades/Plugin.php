@@ -33,7 +33,7 @@ use Wrd\WpObjective\Foundation\Plugin as FoundationPlugin;
  *
  * @see Wrd\WpObjective\Foundation\Plugin
  */
-class Plugin {
+class Plugin extends Facade {
 	/**
 	 * Get the ID to grab the object from the Plugin.
 	 *

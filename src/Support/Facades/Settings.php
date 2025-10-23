@@ -19,7 +19,7 @@ use Wrd\WpObjective\Support\Settings_Manager;
  *
  * @see Wrd\WpObjective\Support\Settings_Manager
  */
-class Settings {
+class Settings extends Facade {
 	/**
 	 * Get the ID to grab the object from the Settings.
 	 *

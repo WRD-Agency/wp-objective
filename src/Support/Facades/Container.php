@@ -32,7 +32,7 @@ use Wrd\WpObjective\Foundation\Container as FoundationContainer;
  *
  * @see Wrd\WpObjective\Foundation\Container
  */
-class Container {
+class Container extends Facade {
 	/**
 	 * Get the ID to grab the object from the container.
 	 *

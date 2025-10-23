@@ -28,7 +28,7 @@ use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
  *
  * @see Wrd\WpObjective\Foundation\Migrate\Migration_Manager
  */
-class Migration {
+class Migration extends Facade {
 	/**
 	 * Get the ID to grab the object from the Migration.
 	 *

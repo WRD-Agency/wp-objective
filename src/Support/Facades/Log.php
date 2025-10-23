@@ -26,7 +26,7 @@ use Wrd\WpObjective\Log\Log_Manager;
  *
  * @see Wrd\WpObjective\Log\Log_Manager
  */
-class Log {
+class Log extends Facade {
 	/**
 	 * Get the ID to grab the object from the Log.
 	 *
