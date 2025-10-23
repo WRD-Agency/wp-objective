@@ -185,7 +185,7 @@ class Container {
 			$type = $param->getType();
 
 			if ( $type instanceof ReflectionNamedType && ! $type->isBuiltin() ) {
-				return $this->get( $type->getName() );
+				$args[] = $this->get( $type->getName() );
 			}
 		}
 
