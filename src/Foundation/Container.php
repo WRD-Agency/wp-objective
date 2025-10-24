@@ -233,12 +233,40 @@ class Container {
 
 		$plugin = $this->get( Plugin::class );
 
-		register_activation_hook( $plugin->file(), array( $this, 'activate' ) );
-		register_deactivation_hook( $plugin->file(), array( $this, 'deactive' ) );
-		register_uninstall_hook( $plugin->file(), array( $this, 'uninstall' ) );
+		register_activation_hook(
+			$plugin->file(),
+			function() {
+				$this->hit_providers( 'activated' );
+			}
+		);
 
-		add_action( 'init', array( $this, 'init' ), PHP_INT_MIN, 0 );
-		add_action( 'shutdown', array( $this, 'shutdown' ), PHP_INT_MAX, 0 );
+		register_deactivation_hook(
+			$plugin->file(),
+			function() {
+				$this->hit_providers( 'deactivated' );
+			}
+		);
+
+		register_uninstall_hook(
+			$plugin->file(),
+			function() {
+				$this->hit_providers( 'uninstall' );
+			}
+		);
+
+		add_action(
+			'init',
+			function() {
+				$this->hit_providers( 'init' );
+			}
+		);
+
+		add_action(
+			'shutdown',
+			function() {
+				$this->hit_providers( 'shutdown' );
+			}
+		);
 	}
 
 	/**
@@ -256,50 +284,5 @@ class Container {
 
 			$concrete->{$method}();
 		}
-	}
-
-	/**
-	 * Run in the 'init' hook.
-	 *
-	 * @return void
-	 */
-	public function init(): void {
-		$this->hit_providers( 'init' );
-	}
-
-	/**
-	 * Run in the 'shutdown' hook at the end of every request.
-	 *
-	 * @return void
-	 */
-	public function shutdown(): void {
-		$this->hit_providers( 'shutdown' );
-	}
-
-	/**
-	 * Runs when the plugin is activated.
-	 *
-	 * @return void
-	 */
-	public function activated(): void {
-		$this->hit_providers( 'activated' );
-	}
-
-	/**
-	 * Runs when the plugin is deactivated.
-	 *
-	 * @return void
-	 */
-	public function deactivated(): void {
-		$this->hit_providers( 'deactivated' );
-	}
-
-	/**
-	 * Runs when the plugin is uninstall.
-	 *
-	 * @return void
-	 */
-	public function uninstall(): void {
-		$this->hit_providers( 'uninstall' );
 	}
 }
