@@ -26,10 +26,6 @@ use Wrd\WpObjective\Foundation\Plugin as FoundationPlugin;
  * @method static void admin()
  * @method static void api()
  * @method static void public()
- * @method static void shutdown()
- * @method static void activated()
- * @method static void deactivated()
- * @method static void uninstall()
  *
  * @see Wrd\WpObjective\Foundation\Plugin
  */

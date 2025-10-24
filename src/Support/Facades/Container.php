@@ -18,17 +18,14 @@ use Wrd\WpObjective\Foundation\Container as FoundationContainer;
  * @method static void bind(string $abstract, object|string|null $concrete = NULL)
  * @method static bool has(string $id)
  * @method static get( $id)
- * @method static resolve( $concrete)
+ * @method static resolve_class_name( $concrete)
  * @method static array make_dependency(array $parameters)
- * @method static void provide()
+ * @method static void provide( $provider)
  * @method static maybe_provide( $provider)
  * @method static void boot()
  * @method static void hit_providers(string $method)
  * @method static void init()
  * @method static void shutdown()
- * @method static void activated()
- * @method static void deactivated()
- * @method static void uninstall()
  *
  * @see Wrd\WpObjective\Foundation\Container
  */

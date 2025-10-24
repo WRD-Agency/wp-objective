@@ -21,10 +21,6 @@ use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
  * @method static void migrate()
  * @method static void init()
  * @method static void boot()
- * @method static void shutdown()
- * @method static void activated()
- * @method static void deactivated()
- * @method static void uninstall()
  *
  * @see Wrd\WpObjective\Foundation\Migrate\Migration_Manager
  */

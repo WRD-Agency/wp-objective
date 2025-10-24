@@ -24,10 +24,6 @@ use Wrd\WpObjective\Admin\Flash_Manager;
  * @method static void warning(string $message, array $args = array ( ))
  * @method static void info(string $message, array $args = array ( ))
  * @method static void init()
- * @method static void shutdown()
- * @method static void activated()
- * @method static void deactivated()
- * @method static void uninstall()
  *
  * @see Wrd\WpObjective\Admin\Flash_Manager
  */

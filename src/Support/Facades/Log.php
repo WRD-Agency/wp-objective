@@ -19,10 +19,6 @@ use Wrd\WpObjective\Log\Log_Manager;
  * @method static void add_wp_error(WP_Error $error)
  * @method static void boot()
  * @method static void init()
- * @method static void shutdown()
- * @method static void activated()
- * @method static void deactivated()
- * @method static void uninstall()
  *
  * @see Wrd\WpObjective\Log\Log_Manager
  */
