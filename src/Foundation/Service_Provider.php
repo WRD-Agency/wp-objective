@@ -30,4 +30,13 @@ abstract class Service_Provider {
 	public function init(): void {
 		// This page left intentionally blank.
 	}
+
+	/**
+	 * Run in the 'shutdown' hook.
+	 *
+	 * @return void
+	 */
+	public function shutdown(): void {
+		// This page left intentionally blank.
+	}
 }
