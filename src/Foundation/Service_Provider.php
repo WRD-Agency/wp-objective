@@ -12,7 +12,7 @@ namespace Wrd\WpObjective\Foundation;
  */
 abstract class Service_Provider {
 	/**
-	 * Runs when the container is booted.
+	 * Runs when the plugin is booted.
 	 *
 	 * Useful for registering hooks.
 	 *

@@ -29,7 +29,7 @@ class Doc_Facades_Script {
 		$methods    = $reflection->getMethods();
 		$str        = '/**' . PHP_EOL;
 
-		$str .= " * Facade for accessing the '$class' instance in the container." . PHP_EOL;
+		$str .= " * Facade for accessing the '$class' instance in the plugin." . PHP_EOL;
 		$str .= ' *' . PHP_EOL;
 		$str .= ' * @autodoc facade' . PHP_EOL;
 		$str .= ' *' . PHP_EOL;

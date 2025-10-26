@@ -10,7 +10,7 @@ namespace Wrd\WpObjective\Support\Facades;
 use Wrd\WpObjective\Admin\Flash_Manager;
 
 /**
- * Facade for accessing the 'Wrd\WpObjective\Admin\Flash_Manager' instance in the container.
+ * Facade for accessing the 'Wrd\WpObjective\Admin\Flash_Manager' instance in the plugin.
  *
  * @autodoc facade
  *
@@ -24,6 +24,7 @@ use Wrd\WpObjective\Admin\Flash_Manager;
  * @method static void warning(string $message, array $args = array ( ))
  * @method static void info(string $message, array $args = array ( ))
  * @method static void init()
+ * @method static void shutdown()
  *
  * @see Wrd\WpObjective\Admin\Flash_Manager
  */

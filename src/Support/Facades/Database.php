@@ -10,7 +10,7 @@ namespace Wrd\WpObjective\Support\Facades;
 use Wrd\WpObjective\Database\Database_Manager;
 
 /**
- * Facade for accessing the 'Wrd\WpObjective\Database\Database_Manager' instance in the container.
+ * Facade for accessing the 'Wrd\WpObjective\Database\Database_Manager' instance in the plugin.
  *
  * @autodoc facade
  *

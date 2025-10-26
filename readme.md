@@ -18,9 +18,9 @@ composer require wrd/wp-objective
 
 ## Getting Started
 
-Objective uses a central Container to manage global objects. You can use the `container()` utility to grab the current instance.
+Objective uses a global plugin which serves as a container to manage global objects. You can use the `plugin()` utility to grab the current instance.
 
-The container is responsible for instantiating objects & injecting their dependencies, using it's bindings to do so.
+The plugin is a container responsible for instantiating objects & injecting their dependencies, using it's bindings to do so.
 
 ### Bindings
 
@@ -36,31 +36,52 @@ You can add in your service providers which come with convenient methods for the
 
 ### Configuration
 
-The `config` function provides a quick method to create your Container, list out your bindings, providers & register any needed migrations.
+You can configure your plugin's bindings & service providers by create an extension of the `Plugin` class, like below. In your plugin's entrypoint file you can then create a global instance and boot it.
 
-Your `config` and `boot` calls are the entry point to the entire system and should directly (and preferrable the only thing) in your `plugin.php` file.
+```php
+// my-plugin/src/Foundation/My_Plugin.php
+use Wrd\WpObjective\Foundation\Plugin;
+
+class My_Plugin extends Plugin {
+	/**
+	 * Files to include when the plugin is loaded.
+	 *
+	 * @var string[]
+	 */
+	public array $files = array(
+		// Any files you want to include outside of your typical autoloading.
+	);
+
+	/**
+	 * Bindings to bind upon boot.
+	 *
+	 * @var array<string, class-string<Service_Provider>|Service_Provider>
+	 */
+	public array $bindings = array(
+		// Any bindings you want to configure.
+		// For example, changing the defaut logger:
+		Log_Manager::class => My_Log_Manager::class,
+	);
+
+	/**
+	 * Service providers to register upon boot.
+	 *
+	 * @var (class-string<Service_Provider>|Service_Provider)[]
+	 */
+	public array $providers = array(
+		// Any service providers you want to provide.
+		My_Post_State::class,
+	);
+}
+```
 
 ```php
 // my-plugin/my-plugin.php
-use function Wrd\WpObjective\config;
+use MyVendor\MyPlugin\Foundation\My_Plugin;
 
 require_once 'vendor/autoload.php';
 
-config(
-	array(
-		'bindings'   => array(
-			Plugin::class      => new Plugin( __FILE__, __DIR__ ),
-			Log_Manager::class => Database_Log_Manager::class,
-		),
-		'providers'  => array(
-			Special_Page_Post_State::class,
-			Post_Type::class,
-		),
-		'migrations' => array(
-			Migration::class,
-		),
-	)
-)->boot();
+My_Plugin::create_global( __FILE__, __DIR__ )->boot();
 ```
 
 ### Plugin Class
@@ -162,18 +183,16 @@ class My_Plugin extends Plugin {
 
 ### Facades
 
-Many of the Container's bindings can be easily accessed via Laravel-style Facades. Simply call these statically and your call will be mapped to the function in the current instance.
+Many of the Plugin's bindings can be easily accessed via Laravel-style Facades. Simply call these statically and your call will be mapped to the function in the current instance.
 
 ```php
-Container::bind( Plugin::class, new My_Plugin(__FILE__, __DIR__) );
+Plugin::version();
 
 Flash::success( __('Changes saved successfully.') );
 
 Log::add( message: "Action initiated" );
 
 Migration::add_migration( My_Migration::class );
-
-Plugin::version();
 
 Settings::set( 'admin_email', 'hello@wrd.agency' );
 ```
@@ -251,16 +270,15 @@ class Toggle_Theme_Action extends Action {
 You'll need to make sure you either bind or provide your class. Objects that inherit from the `Service_Provider` class (which Action does) will automatically be provided when they're bound.
 
 ```php
-config([
-	'providers' => [
-		// ...
+class My_Plugin extends Plugin {
+	public $providers = [
 		Toggle_Theme_Action::class
 	]
-]);
+}
 
 // OR
 
-container()->provide( Toggle_Theme_Action::class );
+plugin()->provide( Toggle_Theme_Action::class );
 ```
 
 ### Collections

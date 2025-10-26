@@ -10,7 +10,7 @@ namespace Wrd\WpObjective\Support\Facades;
 use Wrd\WpObjective\Support\Settings_Manager;
 
 /**
- * Facade for accessing the 'Wrd\WpObjective\Support\Settings_Manager' instance in the container.
+ * Facade for accessing the 'Wrd\WpObjective\Support\Settings_Manager' instance in the plugin.
  *
  * @autodoc facade
  *

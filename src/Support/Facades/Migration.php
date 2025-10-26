@@ -10,7 +10,7 @@ namespace Wrd\WpObjective\Support\Facades;
 use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
 
 /**
- * Facade for accessing the 'Wrd\WpObjective\Foundation\Migrate\Migration_Manager' instance in the container.
+ * Facade for accessing the 'Wrd\WpObjective\Foundation\Migrate\Migration_Manager' instance in the plugin.
  *
  * @autodoc facade
  *
@@ -21,6 +21,7 @@ use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
  * @method static void migrate()
  * @method static void init()
  * @method static void boot()
+ * @method static void shutdown()
  *
  * @see Wrd\WpObjective\Foundation\Migrate\Migration_Manager
  */

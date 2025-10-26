@@ -7,10 +7,10 @@
 
 namespace Wrd\WpObjective\Support\Facades;
 
-use Wrd\WpObjective\Foundation\Container;
+use Wrd\WpObjective\Foundation\Plugin;
 
 /**
- * Base implementation of a facade for accessing a container object.
+ * Base implementation of a facade for accessing a plugin binding object.
  *
  * Based on Laravel's Facades system.
  *
@@ -18,21 +18,21 @@ use Wrd\WpObjective\Foundation\Container;
  */
 abstract class Facade {
 	/**
-	 * Holds the object we're mocking with, replacing the call to the container.
+	 * Holds the object we're mocking with, replacing the call to the plugin binding.
 	 *
 	 * @var TObject|null
 	 */
 	protected static mixed $mock = null;
 
 	/**
-	 * The container instance being facaded.
+	 * The plugin binding instance being facaded.
 	 *
-	 * @var Container
+	 * @var Plugin
 	 */
-	protected static Container $container;
+	protected static Plugin $plugin;
 
 	/**
-	 * Get the ID to grab the object from the container.
+	 * Get the ID to grab the object from the plugin.
 	 *
 	 * @return class-string<TObject>
 	 */
@@ -48,27 +48,27 @@ abstract class Facade {
 			return static::$mock;
 		}
 
-		return static::$container->get( static::get_facade_accessor() );
+		return static::$plugin->get( static::get_facade_accessor() );
 	}
 
 	/**
-	 * Set the facade's container.
+	 * Set the facade's plugin.
 	 *
-	 * @param Container $container The container.
+	 * @param Plugin $plugin The plugin.
 	 *
 	 * @return void
 	 */
-	public static function set_container( Container $container ): void {
-		static::$container = $container;
+	public static function set_plugin( Plugin $plugin ): void {
+		static::$plugin = $plugin;
 	}
 
 	/**
-	 * Get the facade's container.
+	 * Get the facade's plugin.
 	 *
-	 * @return Container
+	 * @return Plugin
 	 */
-	public static function get_container(): Container {
-		return static::$container;
+	public static function get_plugin(): Plugin {
+		return static::$plugin;
 	}
 
 	/**
