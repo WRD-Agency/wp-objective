@@ -19,7 +19,7 @@ use Wrd\WpObjective\Support\Facades\Facade;
 /**
  * Base implementation for a plugin.
  */
-class Plugin extends Service_Provider {
+class Plugin {
 	/**
 	 * Files to include when the plugin is loaded.
 	 *
