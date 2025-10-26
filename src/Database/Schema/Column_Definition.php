@@ -46,7 +46,7 @@ class Column_Definition {
 	 *
 	 * @var bool
 	 */
-	public bool $nullable = true;
+	public bool $nullable = false;
 
 	/**
 	 * Whether the column is unsigned or not.

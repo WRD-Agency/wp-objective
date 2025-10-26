@@ -7,8 +7,6 @@
 
 namespace Wrd\WpObjective\Foundation\Migrate;
 
-use Wrd\WpObjective\Database\Database_Manager;
-
 /**
  * Represents a migration.
  */

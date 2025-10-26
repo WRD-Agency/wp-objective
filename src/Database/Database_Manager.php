@@ -25,6 +25,9 @@ class Database_Manager {
 	 */
 	public function sql( string $sql ): WP_Error | true {
 		// TODO.
+		echo '<pre>';
+		var_dump( $sql );
+		echo '</pre>';
 		return true;
 	}
 
@@ -150,7 +153,7 @@ class Database_Manager {
 	 *
 	 * @return Query
 	 */
-	public function find( string $table ): Query {
+	public function query( string $table ): Query {
 		return ( new Query( $this ) )->table( $table );
 	}
 

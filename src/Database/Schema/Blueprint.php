@@ -450,7 +450,7 @@ class Blueprint {
 			$line .= ' NOT NULL';
 		}
 
-		if ( ! $column->autoincrement ) {
+		if ( $column->autoincrement ) {
 			$line .= ' AUTO_INCREMENT';
 		}
 
@@ -486,13 +486,13 @@ class Blueprint {
 			if ( $column->unique ) {
 				$sql .= 'UNIQUE KEY ' . $column_name . ' (' . $column_name . '),' . PHP_EOL;
 			}
-			if ( $column->unique ) {
+			if ( $column->primary ) {
 				$sql .= 'PRIMARY KEY  (' . $column_name . '),' . PHP_EOL;
 			}
 		}
 
 		// Remove the last ', PHP_EOL' as it shouldn't be there.
-		$sql = substr( $sql, 0, strlen( ',', PHP_EOL ) );
+		$sql = substr( $sql, 0, -strlen( ',' . PHP_EOL ) );
 
 		$sql .= PHP_EOL . ") {$charset_collate};";
 
@@ -534,7 +534,7 @@ class Blueprint {
 		}
 
 		// Remove the last ', PHP_EOL' as it shouldn't be there.
-		$sql = substr( $sql, 0, strlen( ',', PHP_EOL ) );
+		$sql = substr( $sql, 0, -strlen( ',' . PHP_EOL ) );
 
 		$sql .= ';';
 
