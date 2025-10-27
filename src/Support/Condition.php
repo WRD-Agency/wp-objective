@@ -259,6 +259,16 @@ class Condition {
 	}
 
 	/**
+	 * Check if the current request is for the screen to create or edit a post.
+	 *
+	 * @return static
+	 */
+	public function is_post_edit_or_create_screen(): static {
+		global $pagenow;
+		return $this->in_array( $pagenow, array( 'post-new.php', 'post.php' ) );
+	}
+
+	/**
 	 * Check if the current post type is given.
 	 *
 	 * @param string|array $post_type The post type, or types, to check for.
