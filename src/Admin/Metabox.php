@@ -104,7 +104,9 @@ abstract class Metabox extends Service_Provider {
 				$ids = array( $ids );
 			}
 
-			remove_meta_box( $ids, get_current_screen(), $context );
+			foreach ( $ids as $id ) {
+				remove_meta_box( $id, get_current_screen(), $context );
+			}
 		}
 
 		add_meta_box( $this->get_id(), $this->get_title(), array( $this, 'display' ), null, $this->get_context(), $this->get_priority() );
