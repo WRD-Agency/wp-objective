@@ -225,11 +225,13 @@ abstract class Post {
 
 	/**
 	 * Get the edit_link.
+	 * 
+	 * @param string      $context Optional. How to output the '&' character. Default '&amp;'.
 	 *
 	 * @return string
 	 */
-	public function get_edit_link(): string {
-		return get_edit_post_link( $this->id );
+	public function get_edit_link( $context = 'display' ): string {
+		return get_edit_post_link( $this->id, $context );
 	}
 
 	/**
