@@ -9,6 +9,7 @@ namespace Wrd\WpObjective\Support;
 
 use Closure;
 use Exception;
+use Wrd\WpObjective\Support\Facades\Plugin;
 
 /**
  * Used for building up a conditional check.
@@ -157,11 +158,11 @@ class Condition {
 	/**
 	 * Allows if all given items are equal.
 	 *
-	 * @param mixed[] ...$items The items to check.
+	 * @param mixed ...$items The items to check.
 	 *
 	 * @return static
 	 */
-	public function is_equal( array ...$items ): static {
+	public function is_equal( mixed ...$items ): static {
 		return $this->is( count( array_unique( $items ) ) === 1 );
 	}
 
@@ -375,24 +376,24 @@ class Condition {
 	 *
 	 * @see Special_Page_Post_State
 	 *
-	 * @param string $class Class name, extending 'Special_Page_Post_State'.
+	 * @param class-string<\Wrd\WpObjective\Admin\Post_States\Special_Page_Post_State> $class_name Class name, extending 'Special_Page_Post_State'.
 	 *
 	 * @return static
 	 */
-	public function is_special_page( string $class ): static {
-		return $this->if( $class::get_post_id() === get_the_ID() );
+	public function is_special_page( $class_name ): static {
+		return $this->if( Plugin::get( $class_name )->get_post_id() === get_the_ID() );
 	}
 
 	/**
 	 * Check if the request triggers an action.
 	 *
-	 * @see Special_Page_Post_State
+	 * @see Action
 	 *
-	 * @param string $class Class name, extending 'Action'.
+	 * @param class-string<\Wrd\WpObjective\Admin\Action> $class_name Class name, extending 'Action'.
 	 *
 	 * @return static
 	 */
-	public function is_action( string $class ): static {
-		return $this->if( $class::is_requested() );
+	public function is_action( $class_name ): static {
+		return $this->if( Plugin::get( $class_name )->is_requested() );
 	}
 }
