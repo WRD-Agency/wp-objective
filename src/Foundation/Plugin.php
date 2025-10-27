@@ -160,7 +160,7 @@ class Plugin {
 				return $this->make( $id );
 			}
 
-			throw new OutOfBoundsException( "The binding '$id' does not exist and cannot be resolved." );
+			throw new OutOfBoundsException( "The binding '" . esc_html( $id ) . "' does not exist and cannot be resolved." );
 		}
 
 		$concrete = $this->bindings[ $id ];
@@ -187,13 +187,13 @@ class Plugin {
 	 */
 	public function make( $class_name ) {
 		if ( ! class_exists( $class_name ) ) {
-			throw new Exception( "The '$class_name' class does not exist and cannot be resolved." );
+			throw new Exception( "The '" . esc_html( $class_name ) . "' class does not exist and cannot be resolved." );
 		}
 
 		$reflection = new ReflectionClass( $class_name );
 
 		if ( ! $reflection->isInstantiable() ) {
-			throw new Exception( "The '$class_name' class is not instantiable and cannot be resolved." );
+			throw new Exception( "The '" . esc_html( $class_name ) . "' class is not instantiable and cannot be resolved." );
 		}
 
 		$constructor = $reflection->getConstructor();
