@@ -130,4 +130,13 @@ abstract class Post_Type extends Service_Provider {
 
 		register_post_type( $this->get_name(), $args );
 	}
+
+	/**
+	 * Get the URL to for the admin page to edit a list of this post type.
+	 * 
+	 * @return string
+	 */
+	public function get_edit_link(): string {
+		return admin_url( 'edit.php?post_type=' . $this->get_name() );
+	}
 }
