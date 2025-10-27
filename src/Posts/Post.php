@@ -118,8 +118,10 @@ abstract class Post {
 				return $this->get_post_field( $field );
 			case 'meta':
 				return $this->get_meta_field( $field );
+			case 'acf':
+				return $this->get_acf_field( $field );
 			default:
-				throw new Exception( "Unknown field type: $type" );
+				throw new Exception( 'Unknown field type: ' . esc_html( $type ) );
 		}
 	}
 
@@ -145,8 +147,11 @@ abstract class Post {
 			case 'meta':
 				$previous = $this->update_meta_field( $field, $value );
 				break;
+			case 'acf':
+				$previous = $this->update_acf_field( $field, $value );
+				break;
 			default:
-				throw new Exception( "Unknown field type: $type" );
+				throw new Exception( 'Unknown field type: ' . esc_html( $type ) );
 		}
 
 		Log::add(
@@ -183,7 +188,7 @@ abstract class Post {
 	 * @return mixed The previous value.
 	 */
 	public function update_post_field( string $field, mixed $value ): mixed {
-		$previous_value = get_post_field( $field, $this->id );
+		$previous_value = $this->get_post_field( $field );
 
 		wp_update_post(
 			array(
@@ -216,9 +221,45 @@ abstract class Post {
 	 * @return mixed The previous value.
 	 */
 	public function update_meta_field( string $field, mixed $value ): mixed {
-		$previous_value = get_post_meta( $this->id, $field, true );
+		$previous_value = $this->get_meta_field( $field );
 
 		update_post_meta( $this->id, $field, $value );
+
+		return $previous_value;
+	}
+
+	/**
+	 * Get a ACF field value.
+	 *
+	 * @param string $key The ACF key.
+	 *
+	 * @return mixed
+	 */
+	public function get_acf_field( string $key ): mixed {
+		if ( ! function_exists( 'get_field' ) ) {
+			return $this->get_meta_field( $key );
+		}
+
+		return get_field( $key, $this->id );
+	}
+
+	/**
+	 * Update a ACF field.
+	 *
+	 * @param string $field The field to update.
+	 *
+	 * @param mixed  $value The value to set.
+	 *
+	 * @return mixed The previous value.
+	 */
+	public function update_acf_field( string $field, mixed $value ): mixed {
+		if ( ! function_exists( 'update_field' ) ) {
+			return $this->update_meta_field( $field, $value );
+		}
+
+		$previous_value = $this->get_acf_field( $field );
+
+		update_field( $field, $value, $this->id );
 
 		return $previous_value;
 	}
@@ -234,8 +275,8 @@ abstract class Post {
 
 	/**
 	 * Get the edit_link.
-	 * 
-	 * @param string      $context Optional. How to output the '&' character. Default '&amp;'.
+	 *
+	 * @param string $context Optional. How to output the '&' character. Default '&amp;'.
 	 *
 	 * @return string
 	 */
@@ -292,13 +333,13 @@ abstract class Post {
 			message: __( 'Updated post.', 'wrd' ),
 			target: $this->id,
 			data: array(
-				'postdata' => $postdata
+				'postdata' => $postdata,
 			)
 		);
-		
+
 		$postdata['ID'] = $this->id;
 
-		wp_update_post($postdata);
+		wp_update_post( $postdata );
 
 		return $this;
 	}
@@ -329,8 +370,8 @@ abstract class Post {
 	 *
 	 * @return static|null
 	 */
-	public static function create( array $postdata = [] ): static|null {
-		$post_type = new (static::get_post_type_class());
+	public static function create( array $postdata = array() ): static|null {
+		$post_type = new ( static::get_post_type_class() );
 
 		$args = wp_parse_args(
 			$postdata,
@@ -343,11 +384,10 @@ abstract class Post {
 
 		$id = wp_insert_post( $args, true );
 
-		if( is_wp_error( $id ) ){
+		if ( is_wp_error( $id ) ) {
 			Log::add_wp_error( $id );
 			return null;
-		}
-		else{
+		} else {
 			Log::add( message: __( 'Created new post.', 'wrd' ), data: $args, target: $id );
 		}
 
