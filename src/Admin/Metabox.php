@@ -82,23 +82,12 @@ abstract class Metabox extends Service_Provider {
 	 * @return void
 	 */
 	public function register(): void {
-		add_meta_box( $this->get_id(), $this->get_title(), array( $this, 'display' ), null, $this->get_context(), $this->get_priority() );
-	}
-
-	/**
-	 * Used to render the metabox.
-	 *
-	 * @param WP_Post $post The post.
-	 *
-	 * @return void
-	 */
-	public function render_callback( WP_Post $post ): void {
 		$condition = $this->get_conditions();
 
 		if ( ! Condition::check( $condition, 'all' ) ) {
 			return;
 		}
 
-		$this->display( $post );
+		add_meta_box( $this->get_id(), $this->get_title(), array( $this, 'display' ), null, $this->get_context(), $this->get_priority() );
 	}
 }
