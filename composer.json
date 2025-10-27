@@ -20,7 +20,8 @@
 		}
 	],
 	"require": {
-		"php": "^8.3.0"
+		"php": "^8.3.0",
+		"phpdocumentor/reflection-docblock": "^5.6"
 	},
 	"scripts": {
 		"doc-facades": "Wrd\\WpObjective\\Scripts\\Doc_Facades_Script::handle"

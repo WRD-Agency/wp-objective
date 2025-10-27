@@ -14,8 +14,8 @@ use Wrd\WpObjective\Support\Settings_Manager;
  *
  * @autodoc facade
  *
- * @method static mixed get(string $key, mixed $default = NULL)
- * @method static mixed set(string $key, mixed $value)
+ * @method static mixed get(string $key, mixed $default) Get an option.
+ * @method static mixed set(string $key, mixed $value) Set an option.
  *
  * @see Wrd\WpObjective\Support\Settings_Manager
  */

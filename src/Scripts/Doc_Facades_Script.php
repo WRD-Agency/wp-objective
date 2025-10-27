@@ -7,29 +7,29 @@
 
 namespace Wrd\WpObjective\Scripts;
 
+use phpDocumentor\Reflection\DocBlock;
+use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
-use ReflectionMethod;
+use ReflectionType;
 use Wrd\WpObjective\Support\Facades\Facade;
 
 /**
  * Script for generating doc comments for facades.
- *
- * @author Ardhana <ardzz@indoxploit.or.id>
  */
 class Doc_Facades_Script {
 	/**
 	 * Generate the doc comment.
 	 *
-	 * @param string $class The class to generate the comment for.
+	 * @param class-string<Facade> $class_name The class to generate the comment for.
 	 *
 	 * @return string
 	 */
-	public function get_method_comments( string $class ): string {
-		$reflection = new ReflectionClass( $class );
+	public function get_method_comments( $class_name ): string {
+		$reflection = new ReflectionClass( $class_name );
 		$methods    = $reflection->getMethods();
 		$str        = '/**' . PHP_EOL;
 
-		$str .= " * Facade for accessing the '$class' instance in the plugin." . PHP_EOL;
+		$str .= " * Facade for accessing the '$class_name' instance in the plugin." . PHP_EOL;
 		$str .= ' *' . PHP_EOL;
 		$str .= ' * @autodoc facade' . PHP_EOL;
 		$str .= ' *' . PHP_EOL;
@@ -39,13 +39,17 @@ class Doc_Facades_Script {
 				continue;
 			}
 
+			$comment   = $method->getDocComment();
+			$factory   = DocBlockFactory::createInstance();
+			$doc_block = $comment ? $factory->create( $comment ) : null;
+
 			$str .= ' * @method static ';
-			$str .= $this->format_return_type( $method ) . $method->getName() . $this->format_params( $method->getParameters() );
+			$str .= $this->get_return_type( $doc_block, $method->getReturnType() ) . ' ' . $method->getName() . '(' . $this->get_params( $doc_block, $method->getParameters() ) . ') ' . $doc_block?->getSummary();
 			$str .= PHP_EOL;
 		}
 
 		$str .= ' *' . PHP_EOL;
-		$str .= ' * @see ' . $class . PHP_EOL;
+		$str .= ' * @see ' . $class_name . PHP_EOL;
 		$str .= ' */';
 
 		return $str;
@@ -54,57 +58,83 @@ class Doc_Facades_Script {
 	/**
 	 * Get the return type of a method.
 	 *
-	 * @param ReflectionMethod $method The method to get return types for.
+	 * @param ?DocBlock       $doc_block The doc comment, if available.
 	 *
-	 * @return string|null
+	 * @param ?ReflectionType $type The return type as a fallback.
+	 *
+	 * @return string
 	 */
-	protected function format_return_type( ReflectionMethod $method ): ?string {
-		$type = $method->getReturnType();
-
-		if ( is_null( $type ) ) {
-			return '';
-		} elseif ( class_exists( $type ) ) {
-			return '\\' . $type . ' ';
+	protected function get_return_type( ?DocBlock $doc_block, ?ReflectionType $type ): ?string {
+		if ( $doc_block && $doc_block->hasTag( 'return' ) ) {
+			/**
+			 * The return tag.
+			 *
+			 * @var \phpDocumentor\Reflection\DocBlock\Tags\Return_
+			 */
+			$return_tag = $doc_block->getTagsByName( 'return' )[0];
+			return (string) $return_tag->getType();
+		} elseif ( $type ) {
+			if ( class_exists( $type ) ) {
+				return '\\' . $type;
+			} else {
+				return $type;
+			}
 		} else {
-			return $type . ' ';
+			return 'mixed';
 		}
 	}
 
 	/**
-	 * Process an array of parameters into a string.
+	 * Get the method's parameters as a string.
 	 *
-	 * @param ReflectionParameter[] $parameters The parameters.
+	 * @param ?DocBlock             $doc_block The doc comment, if available.
+	 *
+	 * @param ReflectionParameter[] $parameters Paremeters to use as a fallback.
 	 *
 	 * @return string
 	 */
-	protected function format_params( array $parameters ): string {
+	protected function get_params( ?DocBlock $doc_block, array $parameters ): string {
 		$output = array();
 
-		foreach ( $parameters as $parameter ) {
-			if ( $parameter->isOptional() ) {
-				if ( $parameter->isDefaultValueAvailable() ) {
-					if ( $parameter->isDefaultValueConstant() ) {
-						$output[] = (string) $parameter->getType() . ' $' . $parameter->getName() . ' = ' . $parameter->getDefaultValueConstantName();
-					} else {
-						$output[] = (string) $parameter->getType() . ' $' . $parameter->getName() . ' = ' . str_replace( array( "\r", "\n" ), ' ', var_export( $parameter->getDefaultValue(), true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Used for formatting, not debug.
+		if ( $doc_block && $doc_block->hasTag( 'param' ) ) {
+			foreach ( $doc_block->getTagsByName( 'param' ) as $tag ) {
+				/**
+				 * The parameter.
+				 *
+				 * @var \phpDocumentor\Reflection\DocBlock\Tags\Param
+				 */
+				$param = $tag;
+
+				$output[] = (string) $param->getType() . ' $' . $param->getVariableName();
+			}
+		} elseif ( $parameters ) {
+			foreach ( $parameters as $parameter ) {
+				if ( $parameter->isOptional() ) {
+					if ( $parameter->isDefaultValueAvailable() ) {
+						if ( $parameter->isDefaultValueConstant() ) {
+							$output[] = (string) $parameter->getType() . ' $' . $parameter->getName() . ' = ' . $parameter->getDefaultValueConstantName();
+						} else {
+							$output[] = (string) $parameter->getType() . ' $' . $parameter->getName() . ' = ' . str_replace( array( "\r", "\n" ), ' ', var_export( $parameter->getDefaultValue(), true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Used for formatting, not debug.
+						}
 					}
+				} else {
+					$output[] = (string) $parameter->getType() . ' $' . $parameter->getName();
 				}
-			} else {
-				$output[] = (string) $parameter->getType() . ' $' . $parameter->getName();
 			}
 		}
-		return '(' . implode( ', ', $output ) . ')';
+
+		return implode( ', ', $output );
 	}
 
 	/**
 	 * Get the return type from the facade accessor.
 	 *
-	 * @param string $class The class to get the accessor for.
+	 * @param class-string<Facade> $class_name The class to get the accessor for.
 	 *
 	 * @return string
 	 */
-	public function get_facade_accessor_return_type( string $class ): string {
-		return $class::get_facade_accessor();
+	public function get_facade_accessor_return_type( $class_name ): string {
+		return $class_name::get_facade_accessor();
 	}
 
 	/**
@@ -141,7 +171,10 @@ class Doc_Facades_Script {
 		$dir = $namespace;
 
 		foreach ( $psr4 as $ns => $path ) {
-			$dir = str_replace( '\\', '/', str_replace( $ns, $path, $namespace ) );
+			if ( str_starts_with( $namespace, $ns ) ) {
+				$dir = str_replace( '\\', '/', str_replace( $ns, $path, $namespace ) );
+				break;
+			}
 		}
 
 		$map   = array();
@@ -236,7 +269,7 @@ class Doc_Facades_Script {
 				continue;
 			}
 
-			$success = file_put_contents( $file_path, $new_code ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents -- File reading.
+			$success = file_put_contents( $file_path, $new_code ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- File reading.
 
 			if ( $success > 0 ) {
 				echo 'Updated: ' . $file_path . PHP_EOL; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Console.

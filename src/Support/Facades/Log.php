@@ -14,12 +14,12 @@ use Wrd\WpObjective\Log\Log_Manager;
  *
  * @autodoc facade
  *
- * @method static \Wrd\WpObjective\Log\Log get_current_log()
- * @method static void add(?string $id = NULL, Wrd\WpObjective\Log\Level $level = Wrd\WpObjective\Log\Level::DEBUG, string $message = '', ?int $target = NULL, array $data = array ( ), int $timestamp = -1)
- * @method static void add_wp_error(WP_Error $error)
- * @method static void boot()
- * @method static void init()
- * @method static void shutdown()
+ * @method static \Log get_current_log() Get the log of the current request.
+ * @method static void add(?string $id, \Level $level, string $message, ?int $target, array $data, int $timestamp) Create a log message.
+ * @method static void add_wp_error(\WP_Error $error) Add a log message from an error.
+ * @method static void boot() Runs when the plugin is booted.
+ * @method static void init() Run in the 'init' hook.
+ * @method static void shutdown() Run in the 'shutdown' hook.
  *
  * @see Wrd\WpObjective\Log\Log_Manager
  */

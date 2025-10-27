@@ -14,17 +14,17 @@ use Wrd\WpObjective\Admin\Flash_Manager;
  *
  * @autodoc facade
  *
- * @method static void boot()
- * @method static void render_callback()
- * @method static bool add(string $message, array $args = array ( ))
- * @method static array get()
- * @method static bool clear()
- * @method static void success(string $message, array $args = array ( ))
- * @method static void error(string $message, array $args = array ( ))
- * @method static void warning(string $message, array $args = array ( ))
- * @method static void info(string $message, array $args = array ( ))
- * @method static void init()
- * @method static void shutdown()
+ * @method static void boot() Initialize the flash system.
+ * @method static void render_callback() Renders all current flashes.
+ * @method static bool add(string $message, array $args) Add a new flash notice.
+ * @method static array get() Get the currently stored flash notices.
+ * @method static bool clear() Clear the currently stored flash notices.
+ * @method static void success(string $message, array $args) Add a new success flash notice.
+ * @method static void error(string $message, array $args) Add a new error flash notice.
+ * @method static void warning(string $message, array $args) Add a new warning flash notice.
+ * @method static void info(string $message, array $args) Add a new info flash notice.
+ * @method static void init() Run in the 'init' hook.
+ * @method static void shutdown() Run in the 'shutdown' hook.
  *
  * @see Wrd\WpObjective\Admin\Flash_Manager
  */

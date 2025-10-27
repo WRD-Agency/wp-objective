@@ -14,14 +14,14 @@ use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
  *
  * @autodoc facade
  *
- * @method static string get_migrated_version()
- * @method static string set_migrated_version(string $version)
- * @method static add_migration( $migration)
- * @method static bool needs_migration()
- * @method static void migrate()
- * @method static void init()
- * @method static void boot()
- * @method static void shutdown()
+ * @method static string get_migrated_version() Get the migrated to plugin version.
+ * @method static string set_migrated_version(string $version) Update the migrated to plugin version.
+ * @method static void add_migration(class-string<\Migration> $migration) Register a function to run when migrating to the given version.
+ * @method static bool needs_migration() Checks if the installed version of the plugin has migrations to be run.
+ * @method static void migrate() Calls migration functions to upgrade to the latest plugin version.
+ * @method static void init() Run in the 'init' hook.
+ * @method static void boot() Runs when the plugin is booted.
+ * @method static void shutdown() Run in the 'shutdown' hook.
  *
  * @see Wrd\WpObjective\Foundation\Migrate\Migration_Manager
  */
