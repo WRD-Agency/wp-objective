@@ -97,6 +97,6 @@ abstract class Route extends Service_Provider {
 	 * @return void
 	 */
 	public function init(): void {
-		$this->register();
+		add_action( 'rest_api_init', array( $this, 'register' ) );
 	}
 }
