@@ -121,7 +121,7 @@ class Html implements Stringable {
 		$flattened = array();
 
 		if ( array_is_list( $attrs ) ) {
-			$attrs = $this->merge_attrs( $attrs );
+			$attrs = $this->merge_attrs( ...$attrs );
 		}
 
 		foreach ( $attrs as $key => $value ) {
