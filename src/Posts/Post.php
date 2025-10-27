@@ -43,9 +43,9 @@ abstract class Post {
 	/**
 	 * Get the class for this post type.
 	 *
-	 * @return string
+	 * @return class-string<Post_Type>
 	 */
-	abstract public function get_post_type_class(): Post_Type;
+	abstract public function get_post_type_class(): string;
 
 	/**
 	 * Get this items post type.
@@ -286,16 +286,5 @@ abstract class Post {
 		);
 
 		return (bool) wp_delete_post( $this->id, $force );
-	}
-
-	/**
-	 * Create a new post.
-	 *
-	 * @param array $postdata The post's data.
-	 *
-	 * @return Post
-	 */
-	public function create( array $postdata ): Post {
-		return $this->get_post_type_class()::create( $postdata );
 	}
 }
