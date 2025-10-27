@@ -78,6 +78,8 @@ abstract class Metabox extends Service_Provider {
 
 	/**
 	 * Register the metabox.
+	 *
+	 * @return void
 	 */
 	public function register(): void {
 		add_meta_box( $this->get_id(), $this->get_title(), array( $this, 'display' ), null, $this->get_context(), $this->get_priority() );
