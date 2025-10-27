@@ -59,6 +59,17 @@ abstract class Metabox extends Service_Provider {
 	abstract public function get_title(): string;
 
 	/**
+	 * Get the other metaboxes to hide when this one is shown.
+	 *
+	 * The key is the context (e.g. side) and the value is an ID or array of IDs.
+	 *
+	 * @return array<string, string|string[]>
+	 */
+	public function get_hidden(): array {
+		return array();
+	}
+
+	/**
 	 * Display the metabox.
 	 *
 	 * @param WP_Post $post The post being edited. Null if it's being created.
@@ -86,6 +97,14 @@ abstract class Metabox extends Service_Provider {
 
 		if ( ! Condition::check( $condition, 'all' ) ) {
 			return;
+		}
+
+		foreach ( $this->get_hidden() as $context => $ids ) {
+			if ( ! is_array( $ids ) ) {
+				$ids = array( $ids );
+			}
+
+			remove_meta_box( $ids, get_current_screen(), $context );
 		}
 
 		add_meta_box( $this->get_id(), $this->get_title(), array( $this, 'display' ), null, $this->get_context(), $this->get_priority() );
