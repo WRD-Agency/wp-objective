@@ -9,30 +9,11 @@ namespace Wrd\WpObjective\Posts;
 
 use WP_Post;
 use Wrd\WpObjective\Foundation\Service_Provider;
-use Wrd\WpObjective\Log\Level;
-use Wrd\WpObjective\Log\Log_Manager;
-use Wrd\WpObjective\Log\Log_Message;
 
 /**
  * For building up a post type.
  */
 abstract class Post_Type extends Service_Provider {
-	/**
-	 * The logger.
-	 *
-	 * @var Log_Manager
-	 */
-	private Log_Manager $logger;
-
-	/**
-	 * Create an instance.
-	 *
-	 * @param Log_Manager $logger The logger to use.
-	 */
-	public function __construct( Log_Manager $logger ) {
-		$this->logger = $logger;
-	}
-
 	/**
 	 * Get this class' post type.
 	 *
@@ -47,7 +28,7 @@ abstract class Post_Type extends Service_Provider {
 	 *
 	 * @return string
 	 */
-	abstract public function get_post_class(): string;
+	abstract public static function get_post_class(): string;
 
 	/**
 	 * Get the related Post instance for this type.
@@ -57,7 +38,7 @@ abstract class Post_Type extends Service_Provider {
 	 * @return Post
 	 */
 	public function get_post( int|WP_Post|null $post = null ): Post {
-		return new ( $this->get_post_class() )( $post );
+		return new ( static::get_post_class() )( $post );
 	}
 
 	/**
@@ -148,29 +129,5 @@ abstract class Post_Type extends Service_Provider {
 		$args['labels']    = $this->get_labels();
 
 		register_post_type( $this->get_name(), $args );
-	}
-
-	/**
-	 * Create a new post.
-	 *
-	 * @param array $postdata The post's data.
-	 *
-	 * @return Post
-	 */
-	public function create( array $postdata ): Post {
-		$args = wp_parse_args(
-			$postdata,
-			array(
-				'post_type'    => $this->get_name(),
-				'post_title'   => gmdate( 'Y-m-d H:i:s' ),
-				'post_content' => '',
-			)
-		);
-
-		$id = wp_insert_post( $args );
-
-		$this->logger->add( message: __( 'Created new post.', 'wrd' ), data: $args, target: $id );
-
-		return $this->get_post( $id );
 	}
 }

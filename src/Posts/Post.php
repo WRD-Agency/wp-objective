@@ -33,7 +33,7 @@ abstract class Post {
 	public function __construct( int|WP_Post|null $post = null ) {
 		$post = get_post( $post );
 
-		if ( ! $post || $this->get_post_type()->get_name() !== $post->post_type ) {
+		if ( ! $post || $this->get_post_type() !== $post->post_type ) {
 			throw new Exception( 'Invalid post type.' );
 		}
 
@@ -45,15 +45,24 @@ abstract class Post {
 	 *
 	 * @return class-string<Post_Type>
 	 */
-	abstract public function get_post_type_class(): string;
+	abstract public static function get_post_type_class(): string;
 
 	/**
-	 * Get this items post type.
+	 * Get this item's post type object.
 	 *
 	 * @return Post_Type
 	 */
-	public function get_post_type(): Post_Type {
-		return new ( $this->get_post_type_class() );
+	public function get_post_type_object(): Post_Type {
+		return new ( static::get_post_type_class() );
+	}
+
+	/**
+	 * Get this item's post type.
+	 *
+	 * @return string
+	 */
+	public function get_post_type(): string {
+		return $this->get_post_type_object()->get_name();
 	}
 
 	/**
@@ -272,6 +281,29 @@ abstract class Post {
 	}
 
 	/**
+	 * Update the post.
+	 *
+	 * @param array $postdata The post's data.
+	 *
+	 * @return static
+	 */
+	public function update( array $postdata ): static {
+		Log::add(
+			message: __( 'Updated post.', 'wrd' ),
+			target: $this->id,
+			data: array(
+				'postdata' => $postdata
+			)
+		);
+		
+		$postdata['ID'] = $this->id;
+
+		wp_update_post($postdata);
+
+		return $this;
+	}
+
+	/**
 	 * Delete the post.
 	 *
 	 * @param bool $force When enabled, the post is deleted immediately, skipping the trash.
@@ -288,5 +320,37 @@ abstract class Post {
 		);
 
 		return (bool) wp_delete_post( $this->id, $force );
+	}
+
+	/**
+	 * Create a new post.
+	 *
+	 * @param array $postdata The post's data. Optional.
+	 *
+	 * @return static|null
+	 */
+	public static function create( array $postdata = [] ): static|null {
+		$post_type = new (static::get_post_type_class());
+
+		$args = wp_parse_args(
+			$postdata,
+			array(
+				'post_type'    => $post_type->get_name(),
+				'post_title'   => gmdate( 'Y-m-d H:i:s' ),
+				'post_content' => '',
+			)
+		);
+
+		$id = wp_insert_post( $args, true );
+
+		if( is_wp_error( $id ) ){
+			Log::add_wp_error( $id );
+			return null;
+		}
+		else{
+			Log::add( message: __( 'Created new post.', 'wrd' ), data: $args, target: $id );
+		}
+
+		return new static( $id );
 	}
 }
