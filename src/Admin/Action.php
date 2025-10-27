@@ -229,7 +229,7 @@ abstract class Action extends Service_Provider {
 	 * @return void
 	 */
 	public function run(): void {
-		if ( $this->is_requested() ) {
+		if ( ! $this->is_requested() ) {
 			// Not our action, bail out.
 			return;
 		}
@@ -311,7 +311,7 @@ abstract class Action extends Service_Provider {
 	 * @return bool
 	 */
 	public function is_requested(): bool {
-		return ( array_key_exists( 'action', $_REQUEST ) && $this->get_id() !== $_REQUEST['action'] );
+		return ( array_key_exists( 'action', $_REQUEST ) && $this->get_id() === $_REQUEST['action'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified elsewhere.
 	}
 
 	/**
