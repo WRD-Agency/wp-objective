@@ -14,7 +14,7 @@ use Wrd\WpObjective\Support\Settings_Manager;
 /**
  * Handles migrating upward in plugin versions.
  */
-class Migration_Manager extends Service_Provider {
+class Migration_Manager {
 	/**
 	 * The list of migration callbacks.
 	 *
@@ -104,11 +104,12 @@ class Migration_Manager extends Service_Provider {
 	 *
 	 * @return void
 	 */
-	public function migrate(): void {
+	public function run_needed_migrations(): void {
 		$current_version  = $this->plugin->get_version();
 		$migrated_version = $this->get_migrated_version();
 
 		if ( version_compare( $migrated_version, $current_version, '>=' ) ) {
+			// We don't currently support downgrading migrations.
 			_doing_it_wrong( esc_html( static::class . '::migrate' ), esc_html__( 'The last migrated version is more recent than the one currently actived. Has the plugin been downgraded?', 'wrd' ), '1.0.0' );
 			return;
 		}
@@ -133,16 +134,5 @@ class Migration_Manager extends Service_Provider {
 		}
 
 		$this->set_migrated_version( $current_version );
-	}
-
-	/**
-	 * Run in the 'init' hook.
-	 *
-	 * @return void
-	 */
-	public function init(): void {
-		if ( $this->needs_migration() ) {
-			$this->migrate();
-		}
 	}
 }

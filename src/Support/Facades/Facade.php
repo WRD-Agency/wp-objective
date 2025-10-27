@@ -48,7 +48,7 @@ abstract class Facade {
 			return static::$mock;
 		}
 
-		return static::$plugin->get( static::get_facade_accessor() );
+		return static::$plugin->make( static::get_facade_accessor() );
 	}
 
 	/**

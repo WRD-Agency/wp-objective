@@ -8,6 +8,7 @@
 namespace Wrd\WpObjective\Database;
 
 use WP_Error;
+use wpdb;
 use Wrd\WpObjective\Database\Query\Query;
 use Wrd\WpObjective\Database\Schema\Blueprint;
 use Wrd\WpObjective\Database\Schema\Command;
@@ -17,17 +18,30 @@ use Wrd\WpObjective\Database\Schema\Command;
  */
 class Database_Manager {
 	/**
+	 * The WordPress database.
+	 *
+	 * @var wpdb $db
+	 */
+	protected wpdb $db;
+
+	/**
+	 * Create a Database_Manager.
+	 *
+	 * @param wpdb $db The WordPress database to manage.
+	 */
+	public function __construct( wpdb $db ) {
+		$this->db = $db;
+	}
+
+	/**
 	 * Run an SQL command. Contents are sanitized.
 	 *
 	 * @param string $sql The SQL command to run.
 	 *
 	 * @return WP_Error|true
 	 */
-	public function sql( string $sql ): WP_Error | true {
-		// TODO.
-		echo '<pre>';
-		var_dump( $sql );
-		echo '</pre>';
+	public function sql( string $sql ): WP_Error|true {
+
 		return true;
 	}
 
@@ -37,13 +51,7 @@ class Database_Manager {
 	 * @return string
 	 */
 	public function get_table_name_prefix(): string {
-		if( ! array_key_exists('wpdb', $GLOBALS) ){
-			return "";
-		}
-
-		global $wpdb;
-
-		return $wpdb->prefix;
+		return $this->db->prefix;
 	}
 
 	/**
@@ -52,13 +60,7 @@ class Database_Manager {
 	 * @return string
 	 */
 	public function get_charset_collate(): string {
-		if( ! array_key_exists('wpdb', $GLOBALS) ){
-			return "utf8mb4";
-		}
-
-		global $wpdb;
-
-		return $wpdb->charset;
+		return $this->db->charset;
 	}
 
 	/**
@@ -70,8 +72,13 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function create_table( string $name, callable $callback ): WP_Error | true {
-		return $this->sql( $this->get_create_table_sql( $name, $callback ) );
+	public function create_table( string $name, callable $callback ): WP_Error|true {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $this->get_create_table_sql( $name, $callback ) );
+
+		// TODO: Error detection on dbDelta.
+
+		return true;
 	}
 
 	/**
@@ -105,7 +112,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function alter_table( string $name, callable $callback ): WP_Error | true {
+	public function alter_table( string $name, callable $callback ): WP_Error|true {
 		return $this->sql( $this->get_alter_table_sql( $name, $callback ) );
 	}
 
@@ -140,7 +147,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function rename_table( string $old_name, string $new_name ): WP_Error | true {
+	public function rename_table( string $old_name, string $new_name ): WP_Error|true {
 		return $this->sql( $this->get_rename_table_sql( $old_name, $new_name ) );
 	}
 
@@ -170,7 +177,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function drop_table( string $name ): WP_Error | true {
+	public function drop_table( string $name ): WP_Error|true {
 		return $this->sql( $this->get_drop_table_sql( $name ) );
 	}
 
@@ -199,8 +206,13 @@ class Database_Manager {
 	 *
 	 * @return WP_Error|true
 	 */
-	public function insert( string $table, array $row ): WP_Error | true {
-		// TODO.
+	public function insert( string $table, array $row ): WP_Error|true {
+		$success = $this->db->insert( $table, $row );
+
+		if ( false === $success ) {
+			return new WP_Error( 'INSERT_FAILED', esc_html( $this->db->last_error ) );
+		}
+
 		return true;
 	}
 
@@ -222,7 +234,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error|true
 	 */
-	public function run_query( Query $query ): WP_Error | true {
+	public function run_query( Query $query ): WP_Error|true {
 		return $this->sql( $query->to_sql() );
 	}
 }

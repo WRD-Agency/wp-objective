@@ -23,6 +23,8 @@ class Database_Log_Manager extends Log_Manager {
 	 */
 	public function save( Log $log ): bool {
 		// TODO: Implement Database_Log_Manager.
+		trigger_error( 'Not implemented', E_USER_WARNING );
+
 		return true;
 	}
 }

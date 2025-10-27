@@ -7,10 +7,8 @@
 
 namespace Wrd\WpObjective\Foundation;
 
-use Exception;
 use OutOfBoundsException;
-use ReflectionClass;
-use ReflectionNamedType;
+use wpdb;
 use Wrd\WpObjective\Admin\Flash_Manager;
 use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
 use Wrd\WpObjective\Log\Log_Manager;
@@ -42,6 +40,13 @@ class Plugin {
 	protected array $providers = array();
 
 	/**
+	 * Migrations to load in.
+	 *
+	 * @var class-string<Migration>[]
+	 */
+	protected array $migrations = array();
+
+	/**
 	 * Main plugin file.
 	 *
 	 * @var string
@@ -63,6 +68,13 @@ class Plugin {
 	protected static $instance;
 
 	/**
+	 * The container for managing dependency injection.
+	 *
+	 * @var Container $container;
+	 */
+	protected Container $container;
+
+	/**
 	 * Get the globally available instance of the plugin.
 	 *
 	 * @return static
@@ -80,7 +92,7 @@ class Plugin {
 	 *
 	 * @return static
 	 */
-	public static function create_global( string $file, string $dir ): static {
+	public static function create( string $file, string $dir ): static {
 		$instance = new static( $file, $dir );
 
 		static::$instance = $instance;
@@ -100,7 +112,29 @@ class Plugin {
 		$this->file = $file;
 		$this->dir  = $dir;
 
+		$this->container = new Container();
+
+		$this->require_files();
+
 		$this->bind_default_bindings();
+
+		$this->register_bindings();
+		$this->register_providers();
+
+		$this->register_migrations();
+	}
+
+	/**
+	 * Load in any additional files.
+	 *
+	 * @return void
+	 */
+	protected function require_files() {
+		foreach ( $this->files as $file ) {
+			require_once $file;
+		}
+
+		$this->include();
 	}
 
 	/**
@@ -109,37 +143,93 @@ class Plugin {
 	 * @return void
 	 */
 	protected function bind_default_bindings(): void {
-		$this->bind( self::class, $this );
-		$this->bind( static::class, $this );
+		$this->container->add_binding( self::class, $this );
+		$this->container->add_binding( static::class, $this );
 
-		$this->bind( Log_Manager::class );
-		$this->bind( Flash_Manager::class );
-		$this->bind( Migration_Manager::class );
+		global $wpdb;
+		$this->container->add_binding( wpdb::class, $wpdb );
+
+		$this->container->add_binding( Log_Manager::class );
+		$this->container->add_binding( Flash_Manager::class );
 	}
 
 	/**
-	 * Bind an ID to an object/class.
-	 *
-	 * @param ?string                  $id The binding ID. If a class name is provided then it can be given with no second parameter.
-	 *
-	 * @param class-string|object|null $concrete The concrete object. A class name or instance of it.
+	 * Register the assigned bindings.
 	 *
 	 * @return void
 	 */
-	public function bind( ?string $id, $concrete = null ): void {
-		if ( is_null( $concrete ) && class_exists( $id ) ) {
-			$concrete = $id;
-		}
-
-		$this->bindings[ $id ] = $concrete;
-
-		if ( is_subclass_of( $concrete, Service_Provider::class ) ) {
-			$this->provide( $concrete );
+	protected function register_bindings(): void {
+		foreach ( $this->bindings as $id => $concrete ) {
+			$this->container->add_binding( $id, $concrete );
 		}
 	}
 
 	/**
-	 * Finds a binding by its identifier and returns it.
+	 * Register the assigned providers.
+	 *
+	 * @return void
+	 */
+	protected function register_providers(): void {
+		foreach ( $this->providers as $provider ) {
+			$this->container->add_provider( $provider );
+		}
+	}
+
+	/**
+	 * Register the assigned migrations.
+	 *
+	 * @return void
+	 */
+	protected function register_migrations(): void {
+		foreach ( $this->migrations as $migration ) {
+			$this->make( Migration_Manager::class )->add_migration( $migration );
+		}
+	}
+
+	/**
+	 * Attach the plugin functionality to WordPress.
+	 *
+	 * Hooks into WordPress, run migrations etc.
+	 *
+	 * @return void
+	 */
+	public function attach(): void {
+		$migration_manager = $this->make( Migration_Manager::class );
+
+		if ( $migration_manager->needs_migration() ) {
+			$migration_manager->run_needed_migrations();
+		}
+
+		$this->container->hit_service_providers( 'boot' );
+
+		add_action(
+			'init',
+			function () {
+				$this->init();
+
+				if ( is_admin() ) {
+					$this->admin();
+				} elseif ( wp_is_serving_rest_request() ) {
+					$this->api();
+				} else {
+					$this->public();
+				}
+
+				$this->container->hit_service_providers( 'init' );
+			}
+		);
+
+		add_action(
+			'shutdown',
+			function () {
+				$this->shutdown();
+				$this->container->hit_service_providers( 'shutdown' );
+			}
+		);
+	}
+
+	/**
+	 * Finds a binding by its identifier and returns it with it's dependencies injected.
 	 *
 	 * If the identifier is a valid class name, it will be used as the fallback if no matching binding is found.
 	 *
@@ -151,85 +241,8 @@ class Plugin {
 	 *
 	 * @return TObject
 	 */
-	public function get( $id ) {
-		if ( ! array_key_exists( $id, $this->bindings ) ) {
-			// ID is not explictly bound.
-
-			// If the ID is a valid class name, try and resolve it as a fallback.
-			if ( class_exists( $id ) ) {
-				return $this->make( $id );
-			}
-
-			throw new OutOfBoundsException( "The binding '" . esc_html( $id ) . "' does not exist and cannot be resolved." );
-		}
-
-		$concrete = $this->bindings[ $id ];
-
-		if ( ! is_string( $concrete ) ) {
-			// Instance is stored, return it.
-			return $concrete;
-		}
-
-		// A class name is stored, resolve it.
-		return $this->make( $concrete );
-	}
-
-	/**
-	 * Inject dependencies into the constructor of a class.
-	 *
-	 * @template TObject
-	 *
-	 * @param class-string<TObject> $class_name The class name to instantiate.
-	 *
-	 * @return TObject
-	 *
-	 * @throws Exception If the class cannot be resolved.
-	 */
-	public function make( $class_name ) {
-		if ( ! class_exists( $class_name ) ) {
-			throw new Exception( "The '" . esc_html( $class_name ) . "' class does not exist and cannot be resolved." );
-		}
-
-		$reflection = new ReflectionClass( $class_name );
-
-		if ( ! $reflection->isInstantiable() ) {
-			throw new Exception( "The '" . esc_html( $class_name ) . "' class is not instantiable and cannot be resolved." );
-		}
-
-		$constructor = $reflection->getConstructor();
-
-		if ( ! $constructor ) {
-			return new $class_name();
-		}
-
-		$parameters = $constructor->getParameters();
-
-		if ( ! $parameters ) {
-			return new $class_name();
-		}
-
-		$arguments = array();
-
-		foreach ( $parameters as $param ) {
-			$type = $param->getType();
-
-			if ( $type instanceof ReflectionNamedType && ! $type->isBuiltin() ) {
-				$arguments[] = $this->get( $type->getName() );
-			}
-		}
-
-		return $reflection->newInstanceArgs( $arguments );
-	}
-
-	/**
-	 * Register a service provider.
-	 *
-	 * @param class-string<Service_Provider>|Service_Provider $provider The provider.
-	 *
-	 * @return void
-	 */
-	public function provide( $provider ): void {
-		$this->providers[] = $provider;
+	public function make( $id ) {
+		return $this->container->get_bound_instance( $id );
 	}
 
 	/**
@@ -242,30 +255,12 @@ class Plugin {
 	}
 
 	/**
-	 * Alias of 'get_file'.
-	 *
-	 * @return string
-	 */
-	public function file(): string {
-		return $this->get_file();
-	}
-
-	/**
 	 * Get the plugin dir.
 	 *
 	 * @return string
 	 */
 	public function get_dir(): string {
 		return $this->dir;
-	}
-
-	/**
-	 * Alias of 'get_dir'.
-	 *
-	 * @return string
-	 */
-	public function dir(): string {
-		return $this->get_dir();
 	}
 
 	/**
@@ -295,40 +290,12 @@ class Plugin {
 	}
 
 	/**
-	 * Alias of 'get_version'.
-	 *
-	 * @return string
-	 */
-	public function version(): string {
-		return $this->get_version();
-	}
-
-	/**
-	 * Load in any additional files.
+	 * Run when files are being included.
 	 *
 	 * @return void
 	 */
-	public function includes() {
-		foreach ( $this->files as $file ) {
-			require_once $file;
-		}
-	}
-
-	/**
-	 * Calls a method on all registered providers.
-	 *
-	 * @param string $method The method to call.
-	 *
-	 * @return void
-	 */
-	protected function hit_providers( string $method ): void {
-		foreach ( $this->providers as $concrete ) {
-			if ( is_string( $concrete ) ) {
-				$concrete = $this->get( $concrete );
-			}
-
-			$concrete->{$method}();
-		}
+	public function include(): void {
+		// This page left intentionally blank.
 	}
 
 	/**
@@ -337,12 +304,7 @@ class Plugin {
 	 * @return void
 	 */
 	public function boot(): void {
-		$this->includes();
-
-		$this->hit_providers( 'boot' );
-
-		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'shutdown', array( $this, 'shutdown' ) );
+		// This page left intentionally blank.
 	}
 
 	/**
@@ -351,15 +313,7 @@ class Plugin {
 	 * @return void
 	 */
 	public function init(): void {
-		if ( is_admin() ) {
-			$this->admin();
-		} elseif ( wp_is_serving_rest_request() ) {
-			$this->api();
-		} else {
-			$this->public();
-		}
-
-		$this->hit_providers( 'init' );
+		// This page left intentionally blank.
 	}
 
 	/**
@@ -395,6 +349,6 @@ class Plugin {
 	 * @return void
 	 */
 	public function shutdown(): void {
-		$this->hit_providers( 'shutdown' );
+		// This page left intentionally blank.
 	}
 }

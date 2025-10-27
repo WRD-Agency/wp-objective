@@ -12,8 +12,18 @@ use Wrd\WpObjective\Foundation\Plugin;
 /**
  * Get the global plugin instance.
  *
- * @return Plugin
+ * @template TObject
+ *
+ * @param class-string<TObject>|null $id Optional. If provided, this function will resolve a binding.
+ *
+ * @return TObject|Plugin
  */
-function plugin(): Plugin {
-	return Plugin::get_instance();
+function plugin( $id = null ): Plugin {
+	$plugin = Plugin::get_instance();
+
+	if ( is_null( $id ) ) {
+		return $plugin;
+	}
+
+	return $plugin->make( $id );
 }

@@ -7,6 +7,8 @@
 
 namespace Wrd\WpObjective\Foundation;
 
+use Wrd\WpObjective\Support\Facades\Plugin;
+
 /**
  * Base class for an object which needs to boot or init.
  */
@@ -38,5 +40,14 @@ abstract class Service_Provider {
 	 */
 	public function shutdown(): void {
 		// This page left intentionally blank.
+	}
+
+	/**
+	 * Get the currently provided instance.
+	 *
+	 * @return static
+	 */
+	public static function make(): static {
+		return Plugin::make( static::class );
 	}
 }

@@ -81,7 +81,7 @@ use MyVendor\MyPlugin\Foundation\My_Plugin;
 
 require_once 'vendor/autoload.php';
 
-My_Plugin::create_global( __FILE__, __DIR__ )->boot();
+My_Plugin::create( __FILE__, __DIR__ )->attach();
 ```
 
 ### Plugin Class
@@ -104,29 +104,32 @@ use Wrd\WpObjective\Foundation\Plugin;
  */
 class My_Plugin extends Plugin {
 	/**
-	 * The current version of the plugin.
-	 *
-	 * @var string
-	 */
-	public string $version = '1.0.0';
-
-	/**
 	 * Files to include when the plugin is loaded.
 	 *
 	 * @var string[]
 	 */
-	public array $files = array(
-		// ...
-	);
+	public array $files = array();
 
 	/**
-	 * Load in any additional files.
+	 * Bindings to bind upon boot.
 	 *
-	 * @return void
+	 * @var array<string, class-string<Service_Provider>|Service_Provider>
 	 */
-	public function includes() {
-		// This page left intentionally blank.
-	}
+	protected array $bindings = array();
+
+	/**
+	 * Service providers to register upon boot.
+	 *
+	 * @var (class-string<Service_Provider>|Service_Provider)[]
+	 */
+	protected array $providers = array();
+
+	/**
+	 * Migrations to load in.
+	 *
+	 * @var class-string<Migration>[]
+	 */
+	protected array $migrations = array();
 
 	/**
 	 * Runs on the load.
@@ -134,9 +137,6 @@ class My_Plugin extends Plugin {
 	 * @return void
 	 */
 	public function boot(): void {
-		// You should call parent::boot to ensure 'includes' is called and any files in your 'files' property are included.
-		parent::boot();
-
 		// This page left intentionally blank.
 	}
 
@@ -146,9 +146,6 @@ class My_Plugin extends Plugin {
 	 * @return void
 	 */
 	public function init(): void {
-		// You should call parent::init to ensure the 'admin', 'api' and 'public' methods get called.
-		parent::init();
-
 		// This page left intentionally blank.
 	}
 

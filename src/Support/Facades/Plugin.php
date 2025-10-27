@@ -15,21 +15,19 @@ use Wrd\WpObjective\Foundation\Plugin as FoundationPlugin;
  * @autodoc facade
  *
  * @method static static get_instance() Get the globally available instance of the plugin.
- * @method static static create_global(string $file, string $dir) Create the global plugin instance.
+ * @method static static create(string $file, string $dir) Create the global plugin instance.
+ * @method static void require_files() Load in any additional files.
  * @method static void bind_default_bindings() Apply the default bindings.
- * @method static void bind(?string $id, class-string|object|null $concrete) Bind an ID to an object/class.
- * @method static \TObject get(class-string<\TObject> $id) Finds a binding by its identifier and returns it.
- * @method static \TObject make(class-string<\TObject> $class_name) Inject dependencies into the constructor of a class.
- * @method static void provide(class-string<\Service_Provider>|\Service_Provider $provider) Register a service provider.
+ * @method static void register_bindings() Register the assigned bindings.
+ * @method static void register_providers() Register the assigned providers.
+ * @method static void register_migrations() Register the assigned migrations.
+ * @method static void attach() Attach the plugin functionality to WordPress.
+ * @method static \TObject make(class-string<\TObject> $id) Finds a binding by its identifier and returns it with it's dependencies injected.
  * @method static string get_file() Get the plugin file.
- * @method static string file() Alias of 'get_file'.
  * @method static string get_dir() Get the plugin dir.
- * @method static string dir() Alias of 'get_dir'.
  * @method static array get_data() Get the metadata about the plugin.
  * @method static string get_version() Get the current plugin version.
- * @method static string version() Alias of 'get_version'.
- * @method static void includes() Load in any additional files.
- * @method static void hit_providers(string $method) Calls a method on all registered providers.
+ * @method static void include() Run when files are being included.
  * @method static void boot() Loads up a plugin class.
  * @method static void init() Runs on the 'init' hook.
  * @method static void admin() Runs on the 'init' hook in an admin screen.
