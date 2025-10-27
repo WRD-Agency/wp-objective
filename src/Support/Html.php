@@ -481,9 +481,9 @@ class Html implements Stringable {
 	 *
 	 * @param array    $attrs HTML attributes for the select.
 	 *
-	 * @return void
+	 * @return static
 	 */
-	public function select( string $label, array $options, array $attrs = array() ): void {
+	public function select( string $label, array $options, array $attrs = array() ): static {
 		$this->field(
 			$label,
 			$attrs,
@@ -513,6 +513,8 @@ class Html implements Stringable {
 				}
 			}
 		);
+
+		return $this;
 	}
 
 	/**
@@ -522,9 +524,9 @@ class Html implements Stringable {
 	 *
 	 * @param array  $attrs HTML attributes for the text area.
 	 *
-	 * @return void
+	 * @return static
 	 */
-	public function textarea( string $label, array $attrs = array() ): void {
+	public function textarea( string $label, array $attrs = array() ): static {
 		$this->field(
 			$label,
 			$attrs,
@@ -532,5 +534,7 @@ class Html implements Stringable {
 				$html->tag( 'textarea', $attrs );
 			}
 		);
+
+		return $this;
 	}
 }
