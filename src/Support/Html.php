@@ -481,7 +481,7 @@ class Html implements Stringable {
 	 *
 	 * @return void
 	 */
-	protected function select( string $label, array $options, array $attrs = array() ): void {
+	public function select( string $label, array $options, array $attrs = array() ): void {
 		$this->field(
 			$label,
 			$attrs,
@@ -522,7 +522,7 @@ class Html implements Stringable {
 	 *
 	 * @return void
 	 */
-	protected function textarea( string $label, array $attrs = array() ): void {
+	public function textarea( string $label, array $attrs = array() ): void {
 		$this->field(
 			$label,
 			$attrs,
