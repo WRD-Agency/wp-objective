@@ -15,7 +15,7 @@ use Wrd\WpObjective\Log\Log_Message;
 /**
  * Base class for actions.
  */
-abstract class Action  extends Service_Provider {
+abstract class Action extends Service_Provider {
 	/**
 	 * The logger.
 	 *
@@ -37,7 +37,7 @@ abstract class Action  extends Service_Provider {
 	 *
 	 * @return WP_Error|bool
 	 */
-	abstract public function permissions_callback(): WP_Error | bool;
+	abstract public function permissions_callback(): WP_Error|bool;
 
 	/**
 	 * Get the redirection URL upon success.
@@ -152,7 +152,7 @@ abstract class Action  extends Service_Provider {
 	 *
 	 * @return WP_Error|true True if validation passed, or an error if validation failed.
 	 */
-	public function validate_params( array $values ): WP_Error | true {
+	public function validate_params( array $values ): WP_Error|true {
 		$args = $this->get_arguments();
 
 		$required = array();
