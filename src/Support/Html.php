@@ -389,6 +389,38 @@ class Html implements Stringable {
 	}
 
 	/**
+	 * Add a details table.
+	 *
+	 * @param array $data The items of data. Column headings are taken from the keys array.
+	 *
+	 * @return static
+	 */
+	public function details( array $data ): static {
+		if ( ! $data ) {
+			return $this;
+		}
+
+		$this->open( 'table', array( 'class' => 'wrd_details' ) );
+
+		$this->open( 'tbody', array( 'class' => 'wrd_details__body' ) );
+
+		foreach ( $data as $heading => $cell ) {
+			$this->open( 'tr', array( 'class' => 'wrd_details__row' ) );
+
+			$this->tag( 'td', array( 'class' => 'wrd_details__heading' ), $heading );
+			$this->tag( 'td', array( 'class' => 'wrd_details__cell' ), $cell );
+
+			$this->close( 'tr' );
+		}
+
+		$this->close( 'tbody' );
+
+		$this->close( 'table' );
+
+		return $this;
+	}
+
+	/**
 	 * Display a field.
 	 *
 	 * @param string                        $label The field label.
