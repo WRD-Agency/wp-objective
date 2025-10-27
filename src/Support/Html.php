@@ -50,19 +50,6 @@ class Html implements Stringable {
 	}
 
 	/**
-	 * Maps dynamic & static calls to a new instance.
-	 *
-	 * @param  string $method The method being called.
-	 *
-	 * @param  array  $args Arguments to the method.
-	 *
-	 * @return mixed
-	 */
-	public static function __callStatic( $method, $args ) {
-		return ( new static() )->$method( ...$args );
-	}
-
-	/**
 	 * Get the output.
 	 *
 	 * @return string
@@ -198,7 +185,7 @@ class Html implements Stringable {
 		$this->open( $name, $attrs );
 
 		if ( $content ) {
-			echo wp_kses_post( $content );
+			$this->out .= (string) $content;
 		}
 
 		$this->close( $name );
@@ -464,7 +451,7 @@ class Html implements Stringable {
 		if ( in_array( $type, $default_types, true ) ) {
 			$this->tag( 'input', $attrs );
 		} elseif ( is_callable( $contents ) ) {
-			call_user_func( $contents, $this );
+			$this->raw( $contents );
 		}
 
 		$this->close( 'div' );
@@ -484,17 +471,21 @@ class Html implements Stringable {
 	 * @return static
 	 */
 	public function select( string $label, array $options, array $attrs = array() ): static {
+		$attrs['type'] = 'select';
+
 		$this->field(
 			$label,
 			$attrs,
-			function ( Html $html ) use ( $attrs, $options ) {
+			function () use ( $attrs, $options ) {
 				$selected_value = null;
 
 				if ( array_key_exists( 'value', $attrs ) ) {
 					$selected_value = $attrs['value'];
 					unset( $attrs['value'] );
 				}
+				unset( $attrs['type'] );
 
+				$html = Html::of();
 				$html->open( 'select', $attrs );
 
 				foreach ( $options as $value => $label ) {
@@ -511,6 +502,8 @@ class Html implements Stringable {
 						$label
 					);
 				}
+
+				return $html;
 			}
 		);
 
@@ -527,11 +520,14 @@ class Html implements Stringable {
 	 * @return static
 	 */
 	public function textarea( string $label, array $attrs = array() ): static {
+		$attrs['type'] = 'textarea';
+
 		$this->field(
 			$label,
 			$attrs,
-			function ( Html $html ) use ( $attrs ) {
-				$html->tag( 'textarea', $attrs );
+			function () use ( $attrs ) {
+				unset( $attrs['type'] );
+				return Html::of()->tag( 'textarea', $attrs );
 			}
 		);
 
