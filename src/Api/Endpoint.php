@@ -7,6 +7,7 @@
 
 namespace Wrd\WpObjective\Api;
 
+use WP_Error;
 use WP_REST_Request;
 use Wrd\WpObjective\Contracts\Apiable;
 
@@ -20,6 +21,13 @@ abstract class Endpoint {
 	 * @var Wrd\WpObjective\Http\Method[]
 	 */
 	public array $methods = array();
+
+	/**
+	 * Called to check if the current user can undertake this action.
+	 *
+	 * @return WP_Error|bool
+	 */
+	abstract public function permissions_callback(): WP_Error|bool;
 
 	/**
 	 * Get the methods for this endpoint, as an array of strings.

@@ -22,7 +22,7 @@ abstract class Route extends Service_Provider {
 	 *
 	 * @var string
 	 */
-	public string $namespace = '/demo/v1';
+	public string $namespace = 'demo/v1';
 
 	/**
 	 * The name of the resource to use in slugs.
@@ -41,27 +41,28 @@ abstract class Route extends Service_Provider {
 	/**
 	 * Registers an endpoint.
 	 *
-	 * @param string $path The path, relative to the namespace.
+	 * @param string                 $path The path, relative to the namespace.
 	 *
-	 * @param string $class The class name for the endpoint class to register.
+	 * @param class-string<Endpoint> $class_name The class name for the endpoint class to register.
 	 *
 	 * @return void
 	 */
-	protected function register_endpoint( string $path, string $class ): void {
+	protected function register_endpoint( string $path, $class_name ): void {
 		/**
 		 * An endpoint object.
 		 *
 		 * @var Endpoint
 		 */
-		$endpoint = new $class();
+		$endpoint = new $class_name();
 
 		register_rest_route(
 			$this->namespace,
 			$path,
 			array(
-				'methods'  => $endpoint->get_methods(),
-				'args'     => $endpoint->get_arguments(),
-				'callback' => function( WP_REST_Request $request ) use ( $endpoint ) {
+				'methods'             => $endpoint->get_methods(),
+				'args'                => $endpoint->get_arguments(),
+				'permission_callback' => array( $endpoint, 'permissions_callback' ),
+				'callback'            => function ( WP_REST_Request $request ) use ( $endpoint ) {
 					$response = $endpoint->handle( $request );
 					return $this->prepare_for_response( $response );
 				},
