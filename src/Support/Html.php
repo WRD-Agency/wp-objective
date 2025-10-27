@@ -7,10 +7,12 @@
 
 namespace Wrd\WpObjective\Support;
 
+use Stringable;
+
 /**
  * Builder for creating HTML markup.
  */
-class Html {
+class Html implements Stringable {
 	/**
 	 * The HTML output.
 	 *
@@ -21,21 +23,43 @@ class Html {
 	/**
 	 * Create a HTML instance.
 	 *
-	 * @param string $markup The HTML markup to start with. Defaults to empty string.
+	 * @param string|Stringable $markup The HTML markup to start with. Defaults to empty string.
 	 */
-	public function __construct( string $markup = '' ) {
+	public function __construct( string|Stringable $markup = '' ) {
 		$this->out = $markup;
+	}
+
+	/**
+	 * Convert to a string.
+	 *
+	 * @return string
+	 */
+	public function __toString(): string {
+		return $this->out;
 	}
 
 	/**
 	 * Static method for creating an instance.
 	 *
-	 * @param string $markup The HTML markup to start with. Defaults to empty string.
+	 * @param string|Stringable $markup The HTML markup to start with. Defaults to empty string.
 	 *
 	 * @return static
 	 */
-	public static function of( string $markup = '' ): static {
+	public static function of( string|Stringable $markup = '' ): static {
 		return new static( $markup );
+	}
+
+	/**
+	 * Maps dynamic & static calls to a new instance.
+	 *
+	 * @param  string $method The method being called.
+	 *
+	 * @param  array  $args Arguments to the method.
+	 *
+	 * @return mixed
+	 */
+	public static function __callStatic( $method, $args ) {
+		return ( new static() )->$method( ...$args );
 	}
 
 	/**
@@ -101,6 +125,14 @@ class Html {
 		}
 
 		foreach ( $attrs as $key => $value ) {
+			if ( is_bool( $value ) ) {
+				if ( $value ) {
+					$flattened[] = esc_html( $key );
+				}
+
+				continue;
+			}
+
 			$flattened[] = esc_html( $key ) . '="' . esc_attr( $value ) . '"';
 		}
 
@@ -110,11 +142,11 @@ class Html {
 	/**
 	 * Append some raw HTML content.
 	 *
-	 * @param (callable():string)|string $content The content to add.
+	 * @param (callable():string)|string|Stringable $content The content to add.
 	 *
 	 * @return static
 	 */
-	public function raw( callable|string $content = '' ): static {
+	public function raw( callable|string|Stringable $content = '' ): static {
 		if ( is_callable( $content ) ) {
 			$content = call_user_func( $content );
 		}
@@ -158,14 +190,14 @@ class Html {
 	 *
 	 * @param string[]|string[][] $attrs Array of attributes.
 	 *
-	 * @param string              $content The text content.
+	 * @param string|Stringable   $content The text content.
 	 *
 	 * @return static
 	 */
-	public function tag( string $name, array $attrs = array(), string $content = '' ): static {
+	public function tag( string $name, array $attrs = array(), string|Stringable $content = '' ): static {
 		$this->open( $name, $attrs );
 
-		echo esc_html( $content );
+		echo wp_kses_post( $content );
 
 		$this->close( $name );
 
@@ -200,7 +232,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h1( string $text, array $attrs = array() ):static {
+	public function h1( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 1, $attrs );
 	}
 
@@ -213,7 +245,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h2( string $text, array $attrs = array() ):static {
+	public function h2( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 2, $attrs );
 	}
 
@@ -226,7 +258,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h3( string $text, array $attrs = array() ):static {
+	public function h3( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 3, $attrs );
 	}
 
@@ -239,7 +271,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h4( string $text, array $attrs = array() ):static {
+	public function h4( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 4, $attrs );
 	}
 
@@ -252,7 +284,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h5( string $text, array $attrs = array() ):static {
+	public function h5( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 5, $attrs );
 	}
 
@@ -265,7 +297,7 @@ class Html {
 	 *
 	 * @return static
 	 */
-	public function h6( string $text, array $attrs = array() ):static {
+	public function h6( string $text, array $attrs = array() ): static {
 		return $this->heading( $text, 6, $attrs );
 	}
 
@@ -316,11 +348,187 @@ class Html {
 	 */
 	public function button( string $text, string|array $type = array() ): static {
 		$default_attrs = array(
-			'class' => 'wrd_link',
+			'class' => 'wrd_btn',
 		);
 
 		$attrs = is_array( $type ) ? $type : array( 'type' => $type );
 
 		return $this->tag( 'button', array( $default_attrs, $attrs ), $text );
+	}
+
+	/**
+	 * Add a table.
+	 *
+	 * @param array $rows The rows of data. Column headings are taken from the keys of the first row.
+	 *
+	 * @return static
+	 */
+	public function table( array $rows ): static {
+		if ( ! $rows ) {
+			return $this;
+		}
+
+		$columns = array_keys( $rows[0] );
+
+		$this->open( 'table', array( 'class' => 'wrd_table' ) );
+
+		$this->open( 'thead', array( 'class' => 'wrd_table__head' ) );
+		$this->open( 'tr', array( 'class' => 'wrd_table__row' ) );
+
+		foreach ( $columns as $col ) {
+			$this->tag( 'th', array( 'class' => 'wrd_table__header' ), $col );
+		}
+
+		$this->close( 'tr' );
+		$this->close( 'thead' );
+
+		$this->open( 'tbody', array( 'class' => 'wrd_table__body' ) );
+		foreach ( $rows as $row ) {
+			$this->open( 'tr', array( 'class' => 'wrd_table__row' ) );
+
+			foreach ( $row as $col ) {
+				$this->tag( 'td', array( 'class' => 'wrd_table__cell' ), $col );
+			}
+
+			$this->close( 'tr' );
+		}
+		$this->close( 'tbody' );
+
+		$this->close( 'table' );
+
+		return $this;
+	}
+
+	/**
+	 * Display a field.
+	 *
+	 * @param string                        $label The field label.
+	 *
+	 * @param array                         $attrs Input element's attributes.
+	 *
+	 * @param null|(callable(static): void) $contents Function to render the contents, if a default HTML input is not used.
+	 */
+	public function field( string $label, array $attrs = array(), ?callable $contents = null ): static {
+		$attrs = wp_parse_args(
+			$attrs,
+			array(
+				'id'   => uniqid( 'field__' ),
+				'type' => 'text',
+				'name' => '',
+			)
+		);
+
+		$default_types = array(
+			'button',
+			'checkbox',
+			'color',
+			'date',
+			'datetime-local',
+			'email',
+			'file',
+			'hidden',
+			'image',
+			'month',
+			'number',
+			'password',
+			'radio',
+			'range',
+			'reset',
+			'search',
+			'submit',
+			'tel',
+			'text',
+			'time',
+			'url',
+			'week',
+		);
+
+		$id   = $attrs['id'];
+		$name = $attrs['name'];
+		$type = $attrs['type'];
+
+		$this->open( 'div', array( 'class' => "wrd_field wrd_field--$name wrd_field--$type" ) );
+
+		if ( $label ) {
+			$this->tag(
+				'label',
+				array(
+					'class' => 'wrd_field__label',
+					'for'   => $id,
+				)
+			);
+		}
+
+		if ( in_array( $type, $default_types, true ) ) {
+			$this->tag( 'input', $attrs );
+		} elseif ( is_callable( $contents ) ) {
+			call_user_func( $contents, $this );
+		}
+
+		$this->close( 'div' );
+
+		return $this;
+	}
+
+	/**
+	 * Add a select field.
+	 *
+	 * @param string   $label The label.
+	 *
+	 * @param string[] $options Possible values.
+	 *
+	 * @param array    $attrs HTML attributes for the select.
+	 *
+	 * @return void
+	 */
+	protected function select( string $label, array $options, array $attrs = array() ): void {
+		$this->field(
+			$label,
+			$attrs,
+			function ( Html $html ) use ( $attrs, $options ) {
+				$selected_value = null;
+
+				if ( array_key_exists( 'value', $attrs ) ) {
+					$selected_value = $attrs['value'];
+					unset( $attrs['value'] );
+				}
+
+				$html->open( 'select', $attrs );
+
+				foreach ( $options as $value => $label ) {
+					if ( wp_is_numeric_array( $options ) ) {
+						$value = sanitize_title( $label );
+					}
+
+					$html->tag(
+						'option',
+						array(
+							'value'    => $value,
+							'selected' => $value === $selected_value,
+						),
+						$label
+					);
+				}
+			}
+		);
+	}
+
+	/**
+	 * Add a text area field.
+	 *
+	 * @param string $label The label.
+	 *
+	 * @param array  $attrs HTML attributes for the text area.
+	 *
+	 * @return void
+	 */
+	protected function textarea( string $label, array $attrs = array() ): void {
+		$this->field(
+			$label,
+			$attrs,
+			function ( Html $html ) use ( $attrs ) {
+				$html->tag( 'textarea', $attrs );
+			}
+		);
 	}
 }
