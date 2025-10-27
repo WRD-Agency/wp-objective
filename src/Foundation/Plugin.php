@@ -271,7 +271,9 @@ class Plugin {
 	 * @return array
 	 */
 	public function get_data(): array {
-		return get_plugin_data( $this->file );
+		$should_translate = did_action( 'init' );
+
+		return get_plugin_data( $this->file, true, $should_translate );
 	}
 
 	/**
