@@ -194,10 +194,12 @@ class Html implements Stringable {
 	 *
 	 * @return static
 	 */
-	public function tag( string $name, array $attrs = array(), string|Stringable $content = '' ): static {
+	public function tag( string $name, array $attrs = array(), string|Stringable|null $content = null ): static {
 		$this->open( $name, $attrs );
 
-		echo wp_kses_post( $content );
+		if ( $content ) {
+			echo wp_kses_post( $content );
+		}
 
 		$this->close( $name );
 
