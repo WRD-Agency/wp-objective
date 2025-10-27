@@ -5,7 +5,7 @@
  * @package wrd/wp-objective
  */
 
-namespace Wrd\WpObjective\Admin\Actions;
+namespace Wrd\WpObjective\Admin;
 
 use WP_Error;
 use Wrd\WpObjective\Foundation\Service_Provider;
