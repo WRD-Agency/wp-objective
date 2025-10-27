@@ -37,6 +37,10 @@ class Database_Manager {
 	 * @return string
 	 */
 	public function get_table_name_prefix(): string {
+		if( ! array_key_exists('wpdb', $GLOBALS) ){
+			return "";
+		}
+
 		global $wpdb;
 
 		return $wpdb->prefix;
@@ -48,6 +52,10 @@ class Database_Manager {
 	 * @return string
 	 */
 	public function get_charset_collate(): string {
+		if( ! array_key_exists('wpdb', $GLOBALS) ){
+			return "utf8mb4";
+		}
+
 		global $wpdb;
 
 		return $wpdb->charset;
@@ -63,6 +71,19 @@ class Database_Manager {
 	 * @return WP_Error | true
 	 */
 	public function create_table( string $name, callable $callback ): WP_Error | true {
+		return $this->sql( $this->get_create_table_sql( $name, $callback ) );
+	}
+
+	/**
+	 * Get the SQL to create a new database table.
+	 *
+	 * @param string                    $name The table name.
+	 *
+	 * @param callable(Blueprint): void $callback Callback to define the schema.
+	 *
+	 * @return string
+	 */
+	public function get_create_table_sql( string $name, callable $callback ): string {
 		$schema = new Blueprint();
 
 		call_user_func( $callback, $schema );
@@ -72,7 +93,7 @@ class Database_Manager {
 			->charset_collate( $this->get_charset_collate() )
 			->command( Command::CREATE );
 
-		return $this->sql( $schema->get_sql() );
+		return $schema->get_sql();
 	}
 
 	/**
@@ -85,6 +106,19 @@ class Database_Manager {
 	 * @return WP_Error | true
 	 */
 	public function alter_table( string $name, callable $callback ): WP_Error | true {
+		return $this->sql( $this->get_alter_table_sql( $name, $callback ) );
+	}
+
+	/**
+	 * Get the SQL to change a new database table.
+	 *
+	 * @param string                    $name The table name.
+	 *
+	 * @param callable(Blueprint): void $callback Callback to define the schema.
+	 *
+	 * @return string
+	 */
+	public function get_alter_table_sql( string $name, callable $callback ): string {
 		$schema = new Blueprint();
 
 		call_user_func( $callback, $schema );
@@ -94,7 +128,7 @@ class Database_Manager {
 			->charset_collate( $this->get_charset_collate() )
 			->command( Command::ALTER );
 
-		return $this->sql( $schema->get_sql() );
+		return $schema->get_sql();
 	}
 
 	/**
@@ -107,13 +141,26 @@ class Database_Manager {
 	 * @return WP_Error | true
 	 */
 	public function rename_table( string $old_name, string $new_name ): WP_Error | true {
+		return $this->sql( $this->get_rename_table_sql( $old_name, $new_name ) );
+	}
+
+	/**
+	 * Get the SQL to rename a database table.
+	 *
+	 * @param string $old_name The original table name.
+	 *
+	 * @param string $new_name The new table name.
+	 *
+	 * @return string
+	 */
+	public function get_rename_table_sql( string $old_name, string $new_name ): string {
 		$schema = ( new Blueprint() )
 			->name( $this->get_table_name_prefix() . $old_name )
 			->charset_collate( $this->get_charset_collate() )
 			->command( Command::RENAME )
 			->new_name( $new_name );
 
-		return $this->sql( $schema->get_sql() );
+		return $schema->get_sql();
 	}
 
 	/**
@@ -124,12 +171,23 @@ class Database_Manager {
 	 * @return WP_Error | true
 	 */
 	public function drop_table( string $name ): WP_Error | true {
+		return $this->sql( $this->get_drop_table_sql( $name ) );
+	}
+
+	/**
+	 * Get the SQL to drop a database table.
+	 *
+	 * @param string $name The table name.
+	 *
+	 * @return string
+	 */
+	public function get_drop_table_sql( string $name ): string {
 		$schema = ( new Blueprint() )
 			->name( $this->get_table_name_prefix() . $name )
 			->charset_collate( $this->get_charset_collate() )
 			->command( Command::DROP );
 
-		return $this->sql( $schema->get_sql( Command::DROP ) );
+		return $schema->get_sql( Command::DROP );
 	}
 
 	/**

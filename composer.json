@@ -6,7 +6,8 @@
 	"license": "MIT",
 	"autoload": {
 		"psr-4": {
-			"Wrd\\WpObjective\\": "src/"
+			"Wrd\\WpObjective\\": "src/",
+			"Tests\\": "tests/"
 		},
 		"files": [
 			"src/functions.php"
@@ -19,10 +20,18 @@
 		}
 	],
 	"require": {
-		"php": ">=8.2"
+		"php": "^8.3.0"
 	},
 	"scripts": {
 		"doc-facades": "Wrd\\WpObjective\\Scripts\\Doc_Facades_Script::handle"
 	},
-	"minimum-stability": "stable"
+	"minimum-stability": "stable",
+	"require-dev": {
+		"pestphp/pest": "^4.1"
+	},
+	"config": {
+		"allow-plugins": {
+			"pestphp/pest-plugin": true
+		}
+	}
 }
