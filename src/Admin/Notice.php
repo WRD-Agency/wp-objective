@@ -29,7 +29,7 @@ abstract class Notice extends Service_Provider {
 	 * @return string
 	 */
 	public function get_id(): string {
-		return static::class;
+		return sanitize_key( static::class );
 	}
 
 	/**
