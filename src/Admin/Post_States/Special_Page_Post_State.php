@@ -71,12 +71,16 @@ abstract class Special_Page_Post_State extends Post_State {
 	/**
 	 * Check if a post has this state.
 	 *
-	 * @param int|WP_Post $post The post to check.
+	 * @param int|WP_Post|null $post The post to check. Defaults to global post.
 	 *
 	 * @return bool
 	 */
-	public function has_state( int|WP_Post $post ): bool {
+	public function has_state( int|WP_Post|null $post = null ): bool {
 		$post = get_post( $post );
+
+		if ( ! $post ) {
+			return false;
+		}
 
 		return $this->get_post_id() === $post->ID;
 	}
