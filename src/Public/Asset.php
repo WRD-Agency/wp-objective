@@ -96,18 +96,18 @@ abstract class Asset extends Service_Provider {
 	 *
 	 * Must be registered first.
 	 *
-	 * @return bool
+	 * @return void
 	 */
-	public function enqueue(): bool {
+	public function enqueue(): void {
 		switch ( $this->get_type() ) {
 			case 'script':
-				return wp_enqueue_script( $this->get_handle() );
+				wp_enqueue_script( $this->get_handle() );
+				return;
 
 			case 'style':
-				return wp_enqueue_style( $this->get_handle() );
+				wp_enqueue_style( $this->get_handle() );
+				return;
 		}
-
-		return false;
 	}
 
 	/**
@@ -120,7 +120,8 @@ abstract class Asset extends Service_Provider {
 			return false;
 		}
 
-		return $this->enqueue();
+		$this->enqueue();
+		return true;
 	}
 
 	/**
