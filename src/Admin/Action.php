@@ -19,16 +19,16 @@ abstract class Action extends Service_Provider {
 	/**
 	 * The logger.
 	 *
-	 * @var ?Log_Manager
+	 * @var Log_Manager
 	 */
-	private ?Log_Manager $logger;
+	private Log_Manager $logger;
 
 	/**
 	 * Create an instance.
 	 *
-	 * @param ?Log_Manager $logger The logger to use.
+	 * @param Log_Manager $logger The logger to use.
 	 */
-	public function __construct( ?Log_Manager $logger = null ) {
+	public function __construct( Log_Manager $logger ) {
 		$this->logger = $logger;
 	}
 
@@ -315,23 +315,49 @@ abstract class Action extends Service_Provider {
 	}
 
 	/**
+	 * Get the action URL to trigger the action in a form.
+	 *
+	 * @return string
+	 */
+	public function get_submit_url(): string {
+		return add_query_arg(
+			array(
+				'action' => $this->get_id(),
+			),
+			admin_url( 'admin.php' )
+		);
+	}
+
+	/**
 	 * Get the URL to trigger the action.
 	 *
 	 * @param array $params Additional parameters to include in the URL.
 	 *
 	 * @return string
 	 */
-	public static function get_url( array $params = array() ): string {
-		$name = ( new static() )->get_id();
-
+	public function get_url( array $params = array() ): string {
 		$url = add_query_arg(
 			array(
-				'action' => $name,
+				'action' => $this->get_id(),
 				...$params,
 			),
 			admin_url( 'admin.php' )
 		);
 
-		return wp_nonce_url( $url, $name );
+		return wp_nonce_url( $url, $this->get_id() );
+	}
+
+	/**
+	 * Get the form fields to trigger & secure the action.
+	 *
+	 * @return string
+	 */
+	public function get_fields(): string {
+		$html = '';
+
+		$html .= sprintf( '<input type="hidden" name="%s" value="%s" />', esc_attr( 'action' ), esc_attr( $this->get_id() ) );
+		$html .= wp_nonce_field( $this->get_id(), '_wpnonce', true, false );
+
+		return $html;
 	}
 }
