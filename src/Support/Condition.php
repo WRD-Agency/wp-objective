@@ -381,7 +381,7 @@ class Condition {
 	 * @return static
 	 */
 	public function is_special_page( $class_name ): static {
-		return $this->if( Plugin::make( $class_name )->get_post_id() === get_the_ID() );
+		return $this->is( Plugin::make( $class_name )->get_post_id() === get_the_ID() );
 	}
 
 	/**
@@ -394,6 +394,6 @@ class Condition {
 	 * @return static
 	 */
 	public function is_action( $class_name ): static {
-		return $this->if( Plugin::make( $class_name )->is_requested() );
+		return $this->is( Plugin::make( $class_name )->is_requested() );
 	}
 }
