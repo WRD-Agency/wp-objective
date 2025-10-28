@@ -556,7 +556,7 @@ class Html implements Stringable {
 				$html->open( 'select', $attrs );
 
 				foreach ( $options as $value => $label ) {
-					if ( wp_is_numeric_array( $options ) ) {
+					if ( array_is_list( $options ) ) {
 						$value = sanitize_title( $label );
 					}
 
