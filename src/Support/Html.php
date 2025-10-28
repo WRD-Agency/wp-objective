@@ -348,11 +348,13 @@ class Html implements Stringable {
 	/**
 	 * Add a table.
 	 *
-	 * @param array $rows The rows of data. Column headings are taken from the keys of the first row.
+	 * @param array|Collection $rows The rows of data. Column headings are taken from the keys of the first row.
 	 *
 	 * @return static
 	 */
-	public function table( array $rows ): static {
+	public function table( array|Collection $rows ): static {
+		$rows = Collection::to( $rows );
+
 		if ( ! $rows ) {
 			return $this;
 		}
@@ -391,11 +393,13 @@ class Html implements Stringable {
 	/**
 	 * Add a details table.
 	 *
-	 * @param array $data The items of data. Column headings are taken from the keys array.
+	 * @param array|Collection $data The items of data. Column headings are taken from the keys array.
 	 *
 	 * @return static
 	 */
-	public function details( array $data ): static {
+	public function details( array|Collection $data ): static {
+		$data = Collection::to( $data );
+
 		if ( ! $data ) {
 			return $this;
 		}
@@ -421,13 +425,43 @@ class Html implements Stringable {
 	}
 
 	/**
+	 * Add a form.
+	 *
+	 * @param string                               $url The form's destination URL.
+	 *
+	 * @param null|(callable(): string|Stringable) $children Function to render the contents.
+	 *
+	 * @param array                                $attrs HTML attributes for the text area.
+	 *
+	 * @return static
+	 */
+	public function form( string $url, callable $children, array $attrs = array() ): static {
+		$attrs = wp_parse_args(
+			$attrs,
+			array(
+				'method' => 'POST',
+			)
+		);
+
+		$attrs['action'] = $url;
+
+		$this->open( 'form', $attrs );
+
+		$this->raw( $children );
+
+		$this->close( 'form' );
+
+		return $this;
+	}
+
+	/**
 	 * Display a field.
 	 *
-	 * @param string                        $label The field label.
+	 * @param string                               $label The field label.
 	 *
-	 * @param array                         $attrs Input element's attributes.
+	 * @param array                                $attrs Input element's attributes.
 	 *
-	 * @param null|(callable(static): void) $contents Function to render the contents, if a default HTML input is not used.
+	 * @param null|(callable(): string|Stringable) $contents Function to render the contents, if a default HTML input is not used.
 	 */
 	public function field( string $label, array $attrs = array(), ?callable $contents = null ): static {
 		$attrs = wp_parse_args(
@@ -476,7 +510,8 @@ class Html implements Stringable {
 				array(
 					'class' => 'wrd_field__label',
 					'for'   => $id,
-				)
+				),
+				$label
 			);
 		}
 
