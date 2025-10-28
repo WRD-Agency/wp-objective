@@ -132,11 +132,20 @@ abstract class Post_Type extends Service_Provider {
 	}
 
 	/**
+	 * Get the menu slug for the post type list screen in the admin editor.
+	 *
+	 * @return string
+	 */
+	public function get_edit_slug(): string {
+		return 'edit.php?post_type=' . $this->get_name();
+	}
+
+	/**
 	 * Get the URL to for the admin page to edit a list of this post type.
-	 * 
+	 *
 	 * @return string
 	 */
 	public function get_edit_link(): string {
-		return admin_url( 'edit.php?post_type=' . $this->get_name() );
+		return admin_url( $this->get_edit_slug() );
 	}
 }
