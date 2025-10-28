@@ -268,25 +268,54 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	}
 
 	/**
+	 * Create a new collection.
+	 *
+	 * @template TValue
+	 *
+	 * @param TValue[]|Collection<TValue>|null $elements Array of items.
+	 *
+	 * @return Collection<TValue>
+	 */
+	public static function from( array|Collection|null $elements = array() ): static {
+		if ( is_null( $elements ) ) {
+			return new static( array() );
+		}
+
+		if ( is_array( $elements ) ) {
+			return new static( $elements );
+		}
+
+		return $elements;
+	}
+
+	/**
+	 * Convert a possible collection-like value to an array.
+	 *
+	 * @template TValue
+	 *
+	 * @param TValue[]|Collection<TValue>|null $elements Array of items.
+	 *
+	 * @retrun TValue[]
+	 */
+	public static function to( array|Collection|null $elements = array() ): array {
+		if ( is_null( $elements ) ) {
+			return array();
+		}
+
+		if ( is_array( $elements ) ) {
+			return $elements;
+		}
+
+		return $elements->all();
+	}
+
+	/**
 	 * Get an iterator for the collection.
 	 *
 	 * @return Traversable<T>
 	 */
 	public function getIterator(): Traversable {
 		return new ArrayIterator( $this->elements );
-	}
-
-	/**
-	 * Create a new collection.
-	 *
-	 * @template TValue
-	 *
-	 * @param TValue[]|null $elements Array of items.
-	 *
-	 * @return Collection<TValue>
-	 */
-	public static function from( ?array $elements = array() ): static {
-		return new static( $elements );
 	}
 
 	/**
