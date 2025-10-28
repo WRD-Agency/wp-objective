@@ -62,7 +62,7 @@ abstract class Screen extends Service_Provider {
 	 * @return string
 	 */
 	public function get_slug(): string {
-		return static::class;
+		return sanitize_key( static::class );
 	}
 
 	/**
