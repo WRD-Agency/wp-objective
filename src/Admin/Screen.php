@@ -159,4 +159,23 @@ abstract class Screen extends Service_Provider {
 	 * @return void
 	 */
 	abstract public function display(): void;
+
+	/**
+	 * Check if the current screen is this page.
+	 *
+	 * @return bool
+	 */
+	public function is_current_screen(): bool {
+		if ( ! is_admin() ) {
+			return false;
+		}
+
+		global $hook_suffix;
+
+		if ( ! isset( $hook_suffix ) || ! $hook_suffix ) {
+			return false;
+		}
+
+		return $this->get_hook_suffix() === $hook_suffix;
+	}
 }

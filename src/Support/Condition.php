@@ -396,4 +396,17 @@ class Condition {
 	public function is_action( $class_name ): static {
 		return $this->is( Plugin::make( $class_name )->is_requested() );
 	}
+
+	/**
+	 * Check if the request is for an admin screen.
+	 *
+	 * @see Screen
+	 *
+	 * @param class-string<\Wrd\WpObjective\Admin\Screen> $class_name Class name, extending 'Screen'.
+	 *
+	 * @return static
+	 */
+	public function is_screen( $class_name ): static {
+		return $this->is_admin()->is( Plugin::make( $class_name )->is_current_screen() );
+	}
 }
