@@ -29,7 +29,7 @@ abstract class Notice extends Service_Provider {
 	 * @return string
 	 */
 	public function get_id(): string {
-		return sanitize_key( static::class );
+		return static::class;
 	}
 
 	/**
@@ -44,20 +44,16 @@ abstract class Notice extends Service_Provider {
 	/**
 	 * Display the notice.
 	 *
-	 * @param array $data Data passed from the consumer, if triggered as an flash.
-	 *
 	 * @return void
 	 */
-	abstract public function display( array $data = array() ): void;
+	abstract public function display(): void;
 
 	/**
 	 * Get the contents of '$this->display' as a string, rather than outputting them.
 	 *
-	 * @param array $data Data passed from the consumer, if triggered as an flash.
-	 *
 	 * @return string
 	 */
-	public function get_display( array $data = array() ): string {
+	public function get_display(): string {
 		ob_start();
 		$this->display();
 		return ob_get_clean();
