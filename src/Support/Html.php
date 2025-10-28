@@ -570,6 +570,8 @@ class Html implements Stringable {
 					);
 				}
 
+				$html->close( 'select' );
+
 				return $html;
 			}
 		);
