@@ -181,4 +181,37 @@ class Currency implements Apiable {
 			'thousands_separator' => $this->thousands_separator,
 		);
 	}
+
+	/**
+	 * Parse a string into a value of money.
+	 *
+	 * @param string $value The value to parse.
+	 *
+	 * @return Money
+	 */
+	public function parse( string $value ): Money {
+		$dec_sep      = preg_quote( $this->decimal_separator, '/' );
+		$numeric_only = preg_replace( "/[^0-9$dec_sep]/", '', $value );
+
+		list( $after, $before ) = explode( $this->decimal_separator, $numeric_only, 2 );
+
+		if ( ! $after ) {
+			$after = 0;
+		}
+		$after = (int) $after;
+
+		if ( ! $before ) {
+			$before = 0;
+		}
+		$before = (int) $before;
+
+		if ( $before > pow( 10, $this->decimals ) ) {
+			// Decimal component is too large.
+			$before = (int) substr( $before, 0, $this->decimals );
+		}
+
+		$amount = $after * pow( 10, $this->decimals ) + $before;
+
+		return new Money( $amount, $this );
+	}
 }
