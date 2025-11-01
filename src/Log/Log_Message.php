@@ -203,7 +203,7 @@ class Log_Message implements JsonSerializable {
 		return new Log_Message(
 			level: Level::ERROR,
 			message: $error->get_error_message(),
-			data: $error->get_error_data(),
+			data: $error->get_error_data() ?? array(),
 		);
 	}
 }
