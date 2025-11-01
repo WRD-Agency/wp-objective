@@ -96,7 +96,7 @@ abstract class Client extends Service_Provider {
 		$request = new Request(
 			$this->get_url( $path, $method->has_url_params() ? $params : array() ),
 			$method,
-			$method->has_url_params() ? null : $params
+			$method->has_url_params() ? array() : $params
 		);
 
 		foreach ( $this->middlewares as $middleware ) {
