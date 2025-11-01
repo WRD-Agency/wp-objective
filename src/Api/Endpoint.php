@@ -52,7 +52,7 @@ abstract class Endpoint {
 	 *
 	 * @param \WP_REST_Request $request The request to handle.
 	 *
-	 * @return Apiable|Apiable[] Any API compatible object or an array of API compatible objects.
+	 * @return Apiable|WP_Error|Apiable[] Any API compatible object or an array of API compatible objects.
 	 */
-	abstract public function handle( WP_REST_Request $request ): Apiable|array;
+	abstract public function handle( WP_REST_Request $request ): Apiable|WP_Error|array;
 }

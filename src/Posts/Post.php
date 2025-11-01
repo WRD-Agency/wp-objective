@@ -9,13 +9,14 @@ namespace Wrd\WpObjective\Posts;
 
 use Exception;
 use WP_Post;
+use Wrd\WpObjective\Contracts\Apiable;
 use Wrd\WpObjective\Support\Facades\Log;
 use Wrd\WpObjective\Support\Image;
 
 /**
  * For building up a post.
  */
-abstract class Post {
+abstract class Post implements Apiable {
 	/**
 	 * The post ID.
 	 *
@@ -361,6 +362,19 @@ abstract class Post {
 		);
 
 		return (bool) wp_delete_post( $this->id, $force );
+	}
+
+	/**
+	 * Converts the object to an array representation.
+	 *
+	 * @return array The array representation of the object.
+	 */
+	public function to_api(): array {
+		return array(
+			'id'             => $this->id,
+			'title'          => $this->get_title(),
+			'featured_image' => $this->get_featured_image(),
+		);
 	}
 
 	/**

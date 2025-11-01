@@ -43,6 +43,17 @@ abstract class Asset extends Service_Provider {
 	}
 
 	/**
+	 * Get the data to pass to this asset.
+	 *
+	 * Only supported for 'script' assets.
+	 *
+	 * @return string[]
+	 */
+	public function get_data(): array {
+		return array();
+	}
+
+	/**
 	 * Get the assets this depends on.
 	 *
 	 * @return string[]
@@ -80,6 +91,12 @@ abstract class Asset extends Service_Provider {
 	 * @return bool
 	 */
 	public function register(): bool {
+		if ( 'script' === $this->get_type() ) {
+			foreach ( $this->get_data() as $key => $value ) {
+				wp_add_inline_script( $this->get_handle(), sprintf( 'window["%s"] = $s', esc_js( $key ), json_encode( $value ) ), 'before' );
+			}
+		}
+
 		switch ( $this->get_type() ) {
 			case 'script':
 				return wp_register_script( $this->get_handle(), $this->get_url(), $this->get_dependencies(), $this->get_version(), array( 'strategy' => 'defer' ) );

@@ -9,6 +9,7 @@ namespace Wrd\WpObjective\Posts;
 
 use WP_Post;
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Support\Collection;
 
 /**
  * For building up a post type.
@@ -39,6 +40,34 @@ abstract class Post_Type extends Service_Provider {
 	 */
 	public function get_post( int|WP_Post|null $post = null ): Post {
 		return new ( static::get_post_class() )( $post );
+	}
+
+	/**
+	 * Query the post type and get the related Post instance for this type.
+	 *
+	 * @param array $args Arguments to pass to get_posts.
+	 *
+	 * @return Post[]
+	 *
+	 * @see get_posts
+	 */
+	public function query( array $args = array() ): array {
+		$args['post_type'] = $this->get_name();
+
+		return Collection::from( get_posts( $args ) )
+			->map( fn( WP_Post $post ) => $this->get_post( $post ) )
+			->all();
+	}
+
+	/**
+	 * Check if a given ID is valid for this post type.
+	 *
+	 * @param int|string|null $id The ID to check.
+	 *
+	 * @return bool
+	 */
+	public function has_id( int|string|null $id ): bool {
+		return get_post_type( $id ) === $this->get_name();
 	}
 
 	/**
