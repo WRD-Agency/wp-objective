@@ -49,7 +49,7 @@ enum Method: string {
 	 */
 	public function has_url_params(): bool {
 		return match ( $this ) {
-			self::GET => false,
+			self::GET => true,
 			self::POST => false,
 			self::PUT => false,
 			self::DELETE => false,
