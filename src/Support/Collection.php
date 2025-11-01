@@ -84,8 +84,7 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	 * @return static<T>
 	 */
 	public function filter( ?callable $fn = null ): static {
-		$this->elements = array_filter( $this->elements, $fn, ARRAY_FILTER_USE_BOTH );
-		return $this;
+		return new static( array_filter( $this->elements, $fn, ARRAY_FILTER_USE_BOTH ) );
 	}
 
 	/**
