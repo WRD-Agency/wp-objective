@@ -41,7 +41,7 @@ abstract class Service_Provider {
 	 *
 	 * @return void
 	 */
-	public function register( Container $container ): void {
+	public function connect( Container $container ): void {
 		$this->container = $container;
 
 		// Register all bindings.

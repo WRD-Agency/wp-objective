@@ -26,7 +26,7 @@ class Container {
 	/**
 	 * Service providers to register upon boot.
 	 *
-	 * @var array<class-string<Service_Provider>, class-string<Service_Provider>|Service_Provider>
+	 * @var array<class-string<Service_Provider>, Service_Provider>
 	 */
 	protected array $providers = array();
 
@@ -142,10 +142,11 @@ class Container {
 	 */
 	public function add_provider( $provider ): void {
 		$class_name = is_string( $provider ) ? $provider : $provider::class;
+		$instance   = is_string( $provider ) ? $this->get_bound_instance( $provider ) : $provider;
 
-		$this->providers[ $class_name ] = $provider;
+		$this->providers[ $class_name ] = $instance;
 
-		$provider->register( $this );
+		$instance->connect( $this );
 	}
 
 	/**
@@ -157,12 +158,6 @@ class Container {
 	 */
 	public function hit_service_providers( string $method ): void {
 		foreach ( $this->providers as $class_name => $instance ) {
-			if ( is_string( $instance ) ) {
-				// Instance is currently stored as a class name, resolve it.
-				$instance                       = $this->get_bound_instance( $instance );
-				$this->providers[ $class_name ] = $instance;
-			}
-
 			$instance->{$method}();
 		}
 	}
