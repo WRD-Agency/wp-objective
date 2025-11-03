@@ -14,6 +14,48 @@ use Wrd\WpObjective\Support\Facades\Plugin;
  */
 abstract class Service_Provider {
 	/**
+	 * The container the provider is registered to.
+	 *
+	 * @var Container $container
+	 */
+	protected Container $container;
+
+	/**
+	 * Bindings to bind upon boot.
+	 *
+	 * @var array<string, class-string<Service_Provider>|Service_Provider>
+	 */
+	protected array $bindings = array();
+
+	/**
+	 * Service providers to register upon boot.
+	 *
+	 * @var (class-string<Service_Provider>|Service_Provider)[]
+	 */
+	protected array $providers = array();
+
+	/**
+	 * Registers the service provider to a container.
+	 *
+	 * @param Container $container The container this provider is being registered to.
+	 *
+	 * @return void
+	 */
+	public function register( Container $container ): void {
+		$this->container = $container;
+
+		// Register all bindings.
+		foreach ( $this->bindings as $id => $concrete ) {
+			$this->container->add_binding( $id, $concrete );
+		}
+
+		// Register all sub-providers.
+		foreach ( $this->providers as $provider ) {
+			$this->container->add_provider( $provider );
+		}
+	}
+
+	/**
 	 * Runs when the plugin is booted.
 	 *
 	 * Useful for registering hooks.

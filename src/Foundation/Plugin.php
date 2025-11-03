@@ -264,6 +264,15 @@ class Plugin {
 	}
 
 	/**
+	 * Get the plugin container.
+	 *
+	 * @return Container
+	 */
+	public function get_container(): Container {
+		return $this->container;
+	}
+
+	/**
 	 * Get the metadata about the plugin.
 	 *
 	 * @see get_plugin_data

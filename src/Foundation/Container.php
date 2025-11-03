@@ -144,6 +144,8 @@ class Container {
 		$class_name = is_string( $provider ) ? $provider : $provider::class;
 
 		$this->providers[ $class_name ] = $provider;
+
+		$provider->register( $this );
 	}
 
 	/**
