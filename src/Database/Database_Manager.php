@@ -205,7 +205,7 @@ class Database_Manager {
 	 * @return bool
 	 */
 	public function insert( string $table, array $row ): bool {
-		$success = $this->db->insert( $table, $row );
+		$success = $this->db->insert( $this->get_table_name_prefix() . $table, $row );
 
 		return boolval( $success );
 	}
