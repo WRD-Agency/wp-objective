@@ -13,6 +13,7 @@ use Wrd\WpObjective\Admin\Flash_Manager;
 use Wrd\WpObjective\Foundation\Migrate\Migration_Manager;
 use Wrd\WpObjective\Log\Log_Manager;
 use Wrd\WpObjective\Support\Facades\Facade;
+use Wrd\WpObjective\Support\Settings_Manager;
 
 /**
  * Base implementation for a plugin.
@@ -75,6 +76,13 @@ class Plugin {
 	protected Container $container;
 
 	/**
+	 * The migration manager for the plugin.
+	 *
+	 * @var Migration_Manager $migration_manager
+	 */
+	protected Migration_Manager $migration_manager;
+
+	/**
 	 * Get the globally available instance of the plugin.
 	 *
 	 * @return static
@@ -120,6 +128,8 @@ class Plugin {
 
 		$this->register_bindings();
 		$this->register_providers();
+
+		$this->migration_manager = new Migration_Manager( $this, $this->make( Settings_Manager::class ) );
 
 		$this->register_migrations();
 	}
@@ -182,7 +192,7 @@ class Plugin {
 	 */
 	protected function register_migrations(): void {
 		foreach ( $this->migrations as $migration ) {
-			$this->make( Migration_Manager::class )->add_migration( $migration );
+			$this->migration_manager->add_migration( $migration );
 		}
 	}
 
@@ -194,10 +204,8 @@ class Plugin {
 	 * @return void
 	 */
 	public function attach(): void {
-		$migration_manager = $this->make( Migration_Manager::class );
-
-		if ( $migration_manager->needs_migration() ) {
-			$migration_manager->run_needed_migrations();
+		if ( $this->migration_manager->needs_migration() ) {
+			$this->migration_manager->run_needed_migrations();
 		}
 
 		$this->container->hit_service_providers( 'boot' );

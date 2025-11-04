@@ -307,6 +307,32 @@ class Column_Definition {
 	}
 
 	/**
+	 * Set to an enum column.
+	 *
+	 * @param string[] $cases The allowed enum cases.
+	 *
+	 * @return static
+	 */
+	public function enum( array $cases ): static {
+		foreach ( $cases as $case ) {
+			$case = "'" . esc_sql( $case ) . "'";
+		}
+
+		$length = join( ', ', $cases );
+
+		return $this->type( "ENUM($length)" );
+	}
+
+	/**
+	 * Set to an JSON column.
+	 *
+	 * @return static
+	 */
+	public function json(): static {
+		return $this->type( 'JSON' );
+	}
+
+	/**
 	 * Make the column nullable.
 	 *
 	 * @return static

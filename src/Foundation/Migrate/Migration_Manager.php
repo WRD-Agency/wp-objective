@@ -115,14 +115,15 @@ class Migration_Manager {
 		}
 
 		// Keys are already in version order.
-		foreach ( $this->migrations as $version => $migrations ) {
-			if ( version_compare( $version, $current_version, '>' ) ) {
-				// Future migration? We will run this when our version catches up.
+		foreach ( $this->migrations as $target_version => $migrations ) {
+			if ( version_compare( $target_version, $migrated_version, '<=' ) ) {
+				// Already performed these migrations, skip.
 				continue;
 			}
 
-			if ( version_compare( $version, $migrated_version, '<' ) ) {
-				// Past migration. Should have been run in a previous migration.
+			if ( version_compare( $target_version, $current_version, '>' ) ) {
+				// Future migration? We will run this when our installed version catches up.
+				// Really this is an error - authors should not be writing migrations for versions later than the plugin.
 				continue;
 			}
 

@@ -342,6 +342,30 @@ class Blueprint {
 	}
 
 	/**
+	 * Add an enum column.
+	 *
+	 * @param string   $name The column name.
+	 *
+	 * @param string[] $cases The enum cases to allow.
+	 *
+	 * @return Column_Definition
+	 */
+	public function enum( string $name, array $cases ): Column_Definition {
+		return $this->column( $name )->enum( $cases );
+	}
+
+	/**
+	 * Add an JSON column.
+	 *
+	 * @param string $name The column name.
+	 *
+	 * @return Column_Definition
+	 */
+	public function json( string $name ): Column_Definition {
+		return $this->column( $name )->json();
+	}
+
+	/**
 	 * Add an auto-incrementing ID column.
 	 *
 	 * @param string $name The column name.
@@ -349,7 +373,7 @@ class Blueprint {
 	 * @return Column_Definition
 	 */
 	public function id( string $name ): Column_Definition {
-		return $this->column( $name )->id();
+		return $this->column( $name )->big_integer()->unsigned()->primary();
 	}
 
 	/**
@@ -442,12 +466,18 @@ class Blueprint {
 			$line .= ' UNSIGNED';
 		}
 
-		if ( $column->default ) {
-			$line .= " DEFAULT '" . $column->default . "'";
-		}
-
 		if ( ! $column->nullable ) {
 			$line .= ' NOT NULL';
+		}
+
+		if ( $column->default ) {
+			$unwrapped_default_values = array( 'CURRENT_TIMESTAMP' );
+
+			if ( ! in_array( $column->default, $unwrapped_default_values, true ) ) {
+				$line .= " DEFAULT '" . $column->default . "'";
+			} else {
+				$line .= ' DEFAULT ' . $column->default;
+			}
 		}
 
 		if ( $column->autoincrement ) {
@@ -494,7 +524,7 @@ class Blueprint {
 		// Remove the last ', PHP_EOL' as it shouldn't be there.
 		$sql = substr( $sql, 0, -strlen( ',' . PHP_EOL ) );
 
-		$sql .= PHP_EOL . ") {$charset_collate};";
+		$sql .= PHP_EOL . ');';
 
 		return $sql;
 	}

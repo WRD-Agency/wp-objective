@@ -38,11 +38,10 @@ class Database_Manager {
 	 *
 	 * @param string $sql The SQL command to run.
 	 *
-	 * @return WP_Error|true
+	 * @return int|bool Boolean true for CREATE, ALTER, TRUNCATE and DROP queries. Number of rows affected/selected for all other queries. Boolean false on error.
 	 */
-	public function sql( string $sql ): WP_Error|true {
-
-		return true;
+	public function sql( string $sql ): int|bool {
+		return $this->db->query( $sql );
 	}
 
 	/**
@@ -72,11 +71,10 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function create_table( string $name, callable $callback ): WP_Error|true {
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( $this->get_create_table_sql( $name, $callback ) );
+	public function create_table( string $name, callable $callback ): int|bool {
+		$sql = $this->get_create_table_sql( $name, $callback );
 
-		// TODO: Error detection on dbDelta.
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		return true;
 	}
@@ -112,7 +110,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function alter_table( string $name, callable $callback ): WP_Error|true {
+	public function alter_table( string $name, callable $callback ): int|bool {
 		return $this->sql( $this->get_alter_table_sql( $name, $callback ) );
 	}
 
@@ -147,7 +145,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function rename_table( string $old_name, string $new_name ): WP_Error|true {
+	public function rename_table( string $old_name, string $new_name ): int|bool {
 		return $this->sql( $this->get_rename_table_sql( $old_name, $new_name ) );
 	}
 
@@ -177,7 +175,7 @@ class Database_Manager {
 	 *
 	 * @return WP_Error | true
 	 */
-	public function drop_table( string $name ): WP_Error|true {
+	public function drop_table( string $name ): int|bool {
 		return $this->sql( $this->get_drop_table_sql( $name ) );
 	}
 
@@ -204,16 +202,12 @@ class Database_Manager {
 	 *
 	 * @param array  $row The row to add.
 	 *
-	 * @return WP_Error|true
+	 * @return bool
 	 */
-	public function insert( string $table, array $row ): WP_Error|true {
+	public function insert( string $table, array $row ): bool {
 		$success = $this->db->insert( $table, $row );
 
-		if ( false === $success ) {
-			return new WP_Error( 'INSERT_FAILED', esc_html( $this->db->last_error ) );
-		}
-
-		return true;
+		return boolval( $success );
 	}
 
 	/**
