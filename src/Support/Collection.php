@@ -43,13 +43,13 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	/**
 	 * Reduce the collection to a single value.
 	 *
-	 * @param callable $fn Callback function.
+	 * @param callable $callback Callback function.
 	 * @param mixed    $initial Initial value.
 	 *
 	 * @return mixed
 	 */
-	public function reduce( callable $fn, mixed $initial ): mixed {
-		return array_reduce( $this->elements, $fn, $initial );
+	public function reduce( callable $callback, mixed $initial ): mixed {
+		return array_reduce( $this->elements, $callback, $initial );
 	}
 
 	/**
@@ -57,34 +57,71 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	 *
 	 * @template NewT
 	 *
-	 * @param callable(T): NewT $fn Callback function.
+	 * @param callable(T): NewT $callback Callback function.
 	 *
 	 * @return static<NewT>
 	 */
-	public function map( callable $fn ): static {
-		return new static( array_map( $fn, $this->elements ) );
+	public function map( callable $callback ): static {
+		return new static( array_map( $callback, $this->elements ) );
 	}
 
 	/**
 	 * Iterate over the collection.
 	 *
-	 * @param callable $fn Callback function.
+	 * @param callable $callback Callback function.
 	 *
 	 * @return static<T>
 	 */
-	public function each( callable $fn ): static {
-		array_walk( $this->elements, $fn );
+	public function each( callable $callback ): static {
+		array_walk( $this->elements, $callback );
 		return $this;
 	}
 
 	/**
 	 * Filter the collection.
 	 *
-	 * @param callable(T): bool $fn Callback function.
+	 * @param callable(T): bool $callback Callback function.
 	 * @return static<T>
 	 */
-	public function filter( ?callable $fn = null ): static {
-		return new static( array_filter( $this->elements, $fn, ARRAY_FILTER_USE_BOTH ) );
+	public function filter( ?callable $callback = null ): static {
+		return new static( array_filter( $this->elements, $callback, ARRAY_FILTER_USE_BOTH ) );
+	}
+
+	/**
+	 * Remove a key from the collection.
+	 *
+	 * @param string|int|null $key The key to remove.
+	 * @return static<T>
+	 */
+	public function without( string|int|null $key ): static {
+		if ( is_null( $key ) || ! array_key_exists( $key, $this->elements ) ) {
+			return $this;
+		}
+
+		$copy = array_merge( array(), $this->elements );
+		unset( $copy[ $key ] );
+
+		return new static( $copy );
+	}
+
+	/**
+	 * Find the first element in the collection to match a criteria.
+	 *
+	 * @param callable(T): bool $callback Callback function.
+	 * @return T
+	 */
+	public function find( ?callable $callback ): mixed {
+		return array_find( $this->elements, $callback );
+	}
+
+	/**
+	 * Find the key of the first element in the collection to match a criteria.
+	 *
+	 * @param callable(T): bool $callback Callback function.
+	 * @return string|int|null
+	 */
+	public function find_key( ?callable $callback ): string|int|null {
+		return array_find_key( $this->elements, $callback );
 	}
 
 	/**
@@ -117,13 +154,13 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	/**
 	 * Check if any element in the collection passes a truth test.
 	 *
-	 * @param callable $fn Callback function.
+	 * @param callable $callback Callback function.
 	 *
 	 * @return bool
 	 */
-	public function some( callable $fn ): bool {
+	public function some( callable $callback ): bool {
 		foreach ( $this->elements as $key => $value ) {
-			if ( $fn( $value, $key ) ) {
+			if ( $callback( $value, $key ) ) {
 				return true;
 			}
 		}
@@ -151,17 +188,38 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	}
 
 	/**
+	 * Get a value from a the collection.
+	 *
+	 * @param string|int|null $key     The key to retrieve.
+	 *
+	 * @param mixed           $fallback The default value to return if the key is not found.
+	 *
+	 * @return mixed The value from the array or the default value.
+	 */
+	public function get( int|string|null $key, mixed $fallback = null ) {
+		if ( is_null( $key ) ) {
+			return null;
+		}
+
+		if ( ! array_key_exists( $key, $this->elements ) ) {
+			return $fallback;
+		}
+
+		return $this->elements[ $key ];
+	}
+
+	/**
 	 * Get a value from a nested array using "dot" notation.
 	 *
 	 * @param string|null $key     The key in dot notation.
 	 *
-	 * @param mixed       $default The default value to return if the key is not found.
+	 * @param mixed       $fallback The default value to return if the key is not found.
 	 *
 	 * @return mixed The value from the array or the default value.
 	 */
-	public function dot( ?string $key, mixed $default = null ): mixed {
+	public function dot( ?string $key, mixed $fallback = null ): mixed {
 		if ( is_null( $key ) ) {
-			return $default;
+			return $fallback;
 		}
 
 		$array = $this->elements;
@@ -172,7 +230,7 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 
 		foreach ( explode( '.', $key ) as $segment ) {
 			if ( ! is_array( $array ) || ! array_key_exists( $segment, $array ) ) {
-				return $default;
+				return $fallback;
 			}
 
 			$array = $array[ $segment ];
