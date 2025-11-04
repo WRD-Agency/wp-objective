@@ -127,8 +127,8 @@ class Log implements JsonSerializable {
 	public function get_messages( ?Level $level = null ): Collection {
 		$messages = Collection::from( $this->messages );
 
-		if ( ! is_null( $messages ) ) {
-			$messages = $messages->filter(
+		if ( ! is_null( $level ) ) {
+			return $messages->filter(
 				fn( $message ) => $message->get_level() === $level
 			);
 		}
