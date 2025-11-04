@@ -19,7 +19,7 @@ class Log_Manager extends Service_Provider {
 	 *
 	 * @var ?Log
 	 */
-	private ?Log $current_log = null;
+	protected ?Log $current_log = null;
 
 	/**
 	 * Get the log of the current request.
