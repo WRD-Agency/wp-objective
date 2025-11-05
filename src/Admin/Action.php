@@ -278,8 +278,16 @@ abstract class Action extends Service_Provider {
 			wp_die( $result ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
+		$loggable_args = array();
+
+		foreach ( $this->get_arguments() as $key => $args ) {
+			if ( isset( $args['log'] ) && true === $args['log'] ) {
+				$loggable_args[ $key ] = $values[ $key ];
+			}
+		}
+
 		// Log the action.
-		$this->logger->add( message: __( 'Successfully ran action.', 'wrd' ), data: $values );
+		$this->logger->add( message: __( 'Successfully ran action.', 'wrd' ), data: $loggable_args );
 
 		// Exit.
 		wp_redirect( $this->get_destination( $values ) ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Admin URL.
