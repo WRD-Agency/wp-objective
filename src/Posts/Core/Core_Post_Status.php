@@ -5,16 +5,16 @@
  * @package wrd/wp-objective
  */
 
-namespace Wrd\WpObjective\Posts;
+namespace Wrd\WpObjective\Posts\Core;
 
 use stdClass;
-use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Posts\Post_Status;
 use Wrd\WpObjective\Support\Collection;
 
 /**
  * For utilising a core post status.
  */
-abstract class Core_Post_Status extends Service_Provider {
+class Core_Post_Status extends Post_Status {
 	/**
 	 * The status.
 	 *

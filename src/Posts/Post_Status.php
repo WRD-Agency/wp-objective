@@ -7,12 +7,13 @@
 
 namespace Wrd\WpObjective\Posts;
 
+use Wrd\WpObjective\Contracts\Apiable;
 use Wrd\WpObjective\Foundation\Service_Provider;
 
 /**
  * For building up a post status.
  */
-abstract class Post_Status extends Service_Provider {
+abstract class Post_Status extends Service_Provider implements Apiable {
 	/**
 	 * Get this class' post status.
 	 *
@@ -57,5 +58,17 @@ abstract class Post_Status extends Service_Provider {
 		$args['label'] = $this->get_label();
 
 		register_post_status( $this->get_name(), $args );
+	}
+
+	/**
+	 * Converts the object to an array representation.
+	 *
+	 * @return array The array representation of the object.
+	 */
+	public function to_api(): array {
+		return array(
+			'name'  => $this->get_name(),
+			'label' => $this->get_label(),
+		);
 	}
 }

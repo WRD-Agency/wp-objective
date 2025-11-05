@@ -10,6 +10,7 @@ namespace Wrd\WpObjective\Posts;
 use Exception;
 use WP_Post;
 use Wrd\WpObjective\Contracts\Apiable;
+use Wrd\WpObjective\Posts\Core\Core_Post_Status;
 use Wrd\WpObjective\Support\Collection;
 use Wrd\WpObjective\Support\Facades\Log;
 use Wrd\WpObjective\Support\Image;
@@ -86,6 +87,15 @@ abstract class Post implements Apiable {
 	}
 
 	/**
+	 * Get the default post statii available for this post type.
+	 *
+	 * @return Post_Status
+	 */
+	public static function get_default_status(): Post_Status {
+		return new Core_Post_Status( 'draft' );
+	}
+
+	/**
 	 * Get the status of this post.
 	 *
 	 * @return Post_Status
@@ -108,6 +118,14 @@ abstract class Post implements Apiable {
 		$this->update(
 			array(
 				'post_status' => is_string( $status ) ? $status : $status->get_name(),
+			)
+		);
+
+		Log::add(
+			message: __( 'Status updated', 'wrd' ),
+			target: $this->id,
+			data: array(
+				'new_status' => is_string( $status ) ? $status : $status->get_name(),
 			)
 		);
 
@@ -441,6 +459,7 @@ abstract class Post implements Apiable {
 				'post_type'    => $post_type->get_name(),
 				'post_title'   => gmdate( 'Y-m-d H:i:s' ),
 				'post_content' => '',
+				'post_status'  => static::get_default_status()->get_name(),
 			)
 		);
 
