@@ -11,6 +11,8 @@ use WP_Error;
 use WP_REST_Request;
 use Wrd\WpObjective\Contracts\Apiable;
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Log\Level;
+use Wrd\WpObjective\Log\Log_Manager;
 
 /**
  * Represents a Route in the API.
@@ -18,6 +20,22 @@ use Wrd\WpObjective\Foundation\Service_Provider;
  * 'Route' is a little misleading here as the endpoints can choose their own paths. This is primarily for organisation.
  */
 abstract class Route extends Service_Provider {
+	/**
+	 * The logger.
+	 *
+	 * @var Log_Manager
+	 */
+	private Log_Manager $logger;
+
+	/**
+	 * Create an instance.
+	 *
+	 * @param Log_Manager $logger The logger to use.
+	 */
+	public function __construct( Log_Manager $logger ) {
+		$this->logger = $logger;
+	}
+
 	/**
 	 * The namespace of the route.
 	 *
@@ -66,7 +84,34 @@ abstract class Route extends Service_Provider {
 				'args'                => $endpoint->get_arguments(),
 				'permission_callback' => array( $endpoint, 'permissions_callback' ),
 				'callback'            => function ( WP_REST_Request $request ) use ( $endpoint ) {
+					$this->logger->add(
+						message: __( 'Started API request.', 'wrd' ),
+						data: array(
+							'route'  => $request->get_route(),
+							'method' => $request->get_method(),
+							'params' => $request->get_params(),
+						)
+					);
+
 					$response = $endpoint->handle( $request );
+
+					if ( is_wp_error( $response ) ) {
+						$this->logger->add(
+							level: Level::ERROR,
+							message: __( 'API request handler hit an error.', 'wrd' ),
+							data: array(
+								'error' => $response,
+							)
+						);
+					} else {
+						$this->logger->add(
+							message: __( 'API request handled.', 'wrd' ),
+							data: array(
+								'response' => $response,
+							)
+						);
+					}
+
 					return $this->prepare_for_response( $response );
 				},
 			)
