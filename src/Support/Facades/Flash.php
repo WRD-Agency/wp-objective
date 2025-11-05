@@ -23,8 +23,10 @@ use Wrd\WpObjective\Admin\Flash_Manager;
  * @method static void error(string $message, array $args) Add a new error flash notice.
  * @method static void warning(string $message, array $args) Add a new warning flash notice.
  * @method static void info(string $message, array $args) Add a new info flash notice.
+ * @method static void connect(\Container $container) Registers the service provider to a container.
  * @method static void init() Run in the 'init' hook.
  * @method static void shutdown() Run in the 'shutdown' hook.
+ * @method static static make() Get the currently provided instance.
  *
  * @see Wrd\WpObjective\Admin\Flash_Manager
  */

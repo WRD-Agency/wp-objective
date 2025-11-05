@@ -14,7 +14,7 @@ use Wrd\WpObjective\Database\Database_Manager;
  *
  * @autodoc facade
  *
- * @method static \WP_Error|true sql(string $sql) Run an SQL command. Contents are sanitized.
+ * @method static int|bool sql(string $sql) Run an SQL command. Contents are sanitized.
  * @method static string get_table_name_prefix() Get the prefix for table names.
  * @method static string get_charset_collate() Get the charset for tables.
  * @method static \WP_Error|true create_table(string $name, callable $callback) Create a new database table.
@@ -25,7 +25,7 @@ use Wrd\WpObjective\Database\Database_Manager;
  * @method static string get_rename_table_sql(string $old_name, string $new_name) Get the SQL to rename a database table.
  * @method static \WP_Error|true drop_table(string $name) Drop a database table.
  * @method static string get_drop_table_sql(string $name) Get the SQL to drop a database table.
- * @method static \WP_Error|true insert(string $table, array $row) Insert a row.
+ * @method static bool insert(string $table, array $row) Insert a row.
  * @method static \Query query(string $table) Begin a query.
  * @method static \WP_Error|true run_query(\Query $query) Run a query.
  *

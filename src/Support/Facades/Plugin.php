@@ -25,6 +25,7 @@ use Wrd\WpObjective\Foundation\Plugin as FoundationPlugin;
  * @method static \TObject make(class-string<\TObject> $id) Finds a binding by its identifier and returns it with it's dependencies injected.
  * @method static string get_file() Get the plugin file.
  * @method static string get_dir() Get the plugin dir.
+ * @method static \Container get_container() Get the plugin container.
  * @method static array get_data() Get the metadata about the plugin.
  * @method static string get_version() Get the current plugin version.
  * @method static void include() Run when files are being included.
