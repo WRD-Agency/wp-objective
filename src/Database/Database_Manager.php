@@ -75,6 +75,7 @@ class Database_Manager {
 		$sql = $this->get_create_table_sql( $name, $callback );
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
 
 		return true;
 	}

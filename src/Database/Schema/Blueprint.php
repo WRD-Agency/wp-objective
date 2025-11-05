@@ -373,7 +373,7 @@ class Blueprint {
 	 * @return Column_Definition
 	 */
 	public function id( string $name ): Column_Definition {
-		return $this->column( $name )->big_integer()->unsigned()->primary();
+		return $this->column( $name )->big_integer()->unsigned()->primary()->autoincrement();
 	}
 
 	/**
