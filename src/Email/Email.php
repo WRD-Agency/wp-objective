@@ -134,7 +134,7 @@ class Email {
 
 		$tag = 'h' . intval( $level );
 
-		$this->body .= '<' . esc_attr( $tag ) . ' style="' . esc_attr( $styles[ $level ] ) . ' font-family: \'Inter\', sans-serif;  display: block; margin-bottom: 2rem; color: #1F2937;">' . esc_html( $text ) . '</' . esc_attr( $tag ) . '>';
+		$this->body .= '<' . esc_attr( $tag ) . ' style="' . esc_attr( $styles[ $level ] ) . ' display: block; margin-bottom: 2rem;">' . esc_html( $text ) . '</' . esc_attr( $tag ) . '>';
 
 		return $this;
 	}
@@ -147,7 +147,7 @@ class Email {
 	 * @return self
 	 */
 	public function paragraph( $text ) {
-		$this->body .= '<p style="font-family: \'Inter\', sans-serif; font-size: 18px; font-weight: 400; display: block; margin: 1rem 0; color: #1F2937;">' . esc_html( $text ) . '</p>';
+		$this->body .= '<p style="display: block; margin: 1rem 0;">' . esc_html( $text ) . '</p>';
 
 		return $this;
 	}
@@ -174,7 +174,7 @@ class Email {
 		);
 
 		$this->body .= '
-		<a target="_blank" href="' . esc_attr( $url ) . '" style="background-color: #000; font-family: \'Inter\', sans-serif; font-size: 18px; font-weight: 400; text-decoration: none; padding: 14px 20px; margin: 2rem 0; color: #ffffff; display: inline-block; mso-padding-alt: 0;">
+		<a target="_blank" href="' . esc_attr( $url ) . '" style="background-color: #000;  text-decoration: none; padding: 14px 20px; margin: 2rem 0; color: #ffffff; display: inline-block; mso-padding-alt: 0;">
 			<!--[if mso]>
 				<i style="letter-spacing: 25px; mso-font-width: -100%; mso-text-raise: 30pt;">&nbsp;</i>
 			<![endif]-->
@@ -205,7 +205,7 @@ class Email {
 		$this->body .= '<ul>';
 
 		foreach ( $items as $text ) {
-			$this->body .= '<li class="font-family: \'Inter\', sans-serif; font-size: 18px; font-weight: 400; display: block; margin-bottom: 2rem; margin-top: 1rem; color: #1F2937;">' . esc_html( $text ) . '</li>';
+			$this->body .= '<li class="margin-bottom: 2rem; margin-top: 1rem;">' . esc_html( $text ) . '</li>';
 		}
 
 		$this->body .= '</ul>';
