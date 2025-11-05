@@ -152,7 +152,7 @@ class Html implements Stringable {
 	 *
 	 * @return static
 	 */
-	public function open( string $tag, array $attrs ): static {
+	public function open( string $tag, array $attrs = array() ): static {
 
 		$this->raw( '<' . esc_html( $tag ) . ' ' );
 		$this->raw( $this->flatten_attrs( $attrs ) );
