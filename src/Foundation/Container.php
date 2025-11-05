@@ -44,11 +44,13 @@ class Container {
 			$concrete = $id;
 		}
 
-		$this->bindings[ $id ] = $concrete;
-
 		if ( is_subclass_of( $concrete, Service_Provider::class ) ) {
-			$this->add_provider( $concrete );
+			// If the binding is also a provider, provide it.
+			// This will return an instance we can keep forever.
+			$concrete = $this->add_provider( $concrete );
 		}
+
+		$this->bindings[ $id ] = $concrete;
 	}
 
 	/**
@@ -136,17 +138,21 @@ class Container {
 	/**
 	 * Register a service provider.
 	 *
-	 * @param class-string<Service_Provider>|Service_Provider $provider The provider.
+	 * @template T_Service_Provider
 	 *
-	 * @return void
+	 * @param class-string<T_Service_Provider>|T_Service_Provider $provider The provider.
+	 *
+	 * @return T_Service_Provider
 	 */
-	public function add_provider( $provider ): void {
+	public function add_provider( $provider ): object {
 		$class_name = is_string( $provider ) ? $provider : $provider::class;
 		$instance   = is_string( $provider ) ? $this->get_bound_instance( $provider ) : $provider;
 
 		$this->providers[ $class_name ] = $instance;
 
 		$instance->connect( $this );
+
+		return $instance;
 	}
 
 	/**
