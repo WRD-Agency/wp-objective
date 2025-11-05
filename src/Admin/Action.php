@@ -20,7 +20,7 @@ abstract class Action extends Service_Provider {
 	 *
 	 * @var Log_Manager
 	 */
-	private Log_Manager $logger;
+	protected Log_Manager $logger;
 
 	/**
 	 * Create an instance.
