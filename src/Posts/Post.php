@@ -10,6 +10,7 @@ namespace Wrd\WpObjective\Posts;
 use Exception;
 use WP_Post;
 use Wrd\WpObjective\Contracts\Apiable;
+use Wrd\WpObjective\Support\Collection;
 use Wrd\WpObjective\Support\Facades\Log;
 use Wrd\WpObjective\Support\Image;
 
@@ -73,6 +74,53 @@ abstract class Post implements Apiable {
 	 */
 	public function get_post(): WP_Post {
 		return get_post( $this->id );
+	}
+
+	/**
+	 * Get the post statii available for this post type.
+	 *
+	 * @return Collection<Post_Status>
+	 */
+	public static function get_available_stati(): Collection {
+		return Core_Post_Status::all_not_internal();
+	}
+
+	/**
+	 * Get the status of this post.
+	 *
+	 * @return Post_Status
+	 */
+	public function get_status(): Post_Status {
+		$raw_status = get_post_status( $this->id );
+
+		return static::get_available_stati()
+			->find( fn( Post_Status $status ) => $status->get_name() === $raw_status );
+	}
+
+	/**
+	 * Set the status of this post.
+	 *
+	 * @param string|Post_Status $status The new status.
+	 *
+	 * @return static
+	 */
+	public function set_status( string|Post_Status $status ): static {
+		$this->update(
+			array(
+				'post_status' => is_string( $status ) ? $status : $status->get_name(),
+			)
+		);
+
+		return $this;
+	}
+
+	/**
+	 * Get the ID.
+	 *
+	 * @return int
+	 */
+	public function get_id(): int {
+		return $this->id;
 	}
 
 	/**
