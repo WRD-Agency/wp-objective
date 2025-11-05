@@ -14,6 +14,7 @@ use Wrd\WpObjective\Api\Endpoint;
 use Wrd\WpObjective\Contracts\Apiable;
 use Wrd\WpObjective\Http\Method;
 use Wrd\WpObjective\Posts\Post_Type;
+use Wrd\WpObjective\Support\Facades\Log;
 
 /**
  * Endpoint for getting a club.
@@ -64,6 +65,8 @@ class Post_Type_Singular_Endpoint extends Endpoint {
 		if ( ! $id || ! $this->post_type->has_id( $id ) ) {
 			return new WP_Error( 'unknown_id', __( 'Unknown ID.' ), array( 'status' => 404 ) );
 		}
+
+		Log::target( $id );
 
 		return $this->post_type->get_post( $id );
 	}
