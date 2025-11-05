@@ -32,7 +32,7 @@ class Log implements JsonSerializable {
 	/**
 	 * Targets IDs, in addition to those in log messages.
 	 *
-	 * @var string[]
+	 * @var int[]
 	 */
 	private array $targets = array();
 
@@ -78,7 +78,7 @@ class Log implements JsonSerializable {
 	 *
 	 * @param Log_Message[] $messages The log messages.
 	 *
-	 * @param string[]      $targets Targets IDs, in addition to those in log messages.
+	 * @param int[]      $targets Targets IDs, in addition to those in log messages.
 	 *
 	 * @param Status        $status The log's overall status.
 	 *
@@ -130,11 +130,11 @@ class Log implements JsonSerializable {
 	/**
 	 * Add a target to the log.
 	 *
-	 * @param string $id The ID to target.
+	 * @param int $id The ID to target.
 	 *
 	 * @return void
 	 */
-	public function target( string $id ): void {
+	public function target( int $id ): void {
 		$this->targets[] = $id;
 	}
 
@@ -160,7 +160,7 @@ class Log implements JsonSerializable {
 	/**
 	 * Get all log message targets.
 	 *
-	 * @return Collection<WP_Post>
+	 * @return Collection<int>
 	 */
 	public function get_targets(): Collection {
 		return $this
