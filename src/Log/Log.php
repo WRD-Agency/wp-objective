@@ -165,7 +165,7 @@ class Log implements JsonSerializable {
 	public function get_targets(): Collection {
 		return $this
 			->get_messages()
-			->map( fn( $message ) => $message->get_target() )
+			->map( fn( Log_Message $message ) => $message->get_target_id() )
 			->add( ...$this->targets )
 			->unique()
 			->filter();
