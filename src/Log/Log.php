@@ -30,6 +30,13 @@ class Log implements JsonSerializable {
 	private array $messages = array();
 
 	/**
+	 * Targets IDs, in addition to those in log messages.
+	 *
+	 * @var string[]
+	 */
+	private array $targets = array();
+
+	/**
 	 * The log's overall status.
 	 *
 	 * @var Status
@@ -71,6 +78,8 @@ class Log implements JsonSerializable {
 	 *
 	 * @param Log_Message[] $messages The log messages.
 	 *
+	 * @param string[]      $targets Targets IDs, in addition to those in log messages.
+	 *
 	 * @param Status        $status The log's overall status.
 	 *
 	 * @param ?string       $user_ip The user's IP.
@@ -81,9 +90,10 @@ class Log implements JsonSerializable {
 	 *
 	 * @param ?string       $url The requested URL.
 	 */
-	public function __construct( ?string $id = null, array $messages = array(), Status $status = Status::NONE, ?string $user_ip = null, ?string $user_agent = null, ?int $user_id = null, ?string $url = null ) {
+	public function __construct( ?string $id = null, array $messages = array(), array $targets = array(), Status $status = Status::NONE, ?string $user_ip = null, ?string $user_agent = null, ?int $user_id = null, ?string $url = null ) {
 		$this->id         = $id ?? uniqid( '', true );
 		$this->messages   = $messages;
+		$this->targets    = $targets;
 		$this->status     = $status;
 		$this->user_ip    = $user_ip ?? Server::get_ip();
 		$this->user_agent = $user_agent ?? Server::get_user_agent();
@@ -118,6 +128,17 @@ class Log implements JsonSerializable {
 	}
 
 	/**
+	 * Add a target to the log.
+	 *
+	 * @param string $id The ID to target.
+	 *
+	 * @return void
+	 */
+	public function target( string $id ): void {
+		$this->targets[] = $id;
+	}
+
+	/**
 	 * Get all log messages.
 	 *
 	 * @param ?Level $level Optional. Filters the messages by log level.
@@ -145,6 +166,7 @@ class Log implements JsonSerializable {
 		return $this
 			->get_messages()
 			->map( fn( $message ) => $message->get_target() )
+			->add( ...$this->targets )
 			->unique()
 			->filter();
 	}

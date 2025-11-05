@@ -56,6 +56,17 @@ class Log_Manager extends Service_Provider {
 	}
 
 	/**
+	 * Add a target to the log.
+	 *
+	 * @param string $id The ID to target.
+	 *
+	 * @return void
+	 */
+	public function target( string $id ): void {
+		$this->get_current_log()->target( $id );
+	}
+
+	/**
 	 * Add a log message from an error.
 	 *
 	 * @param WP_Error $error The error.
