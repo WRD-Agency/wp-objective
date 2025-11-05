@@ -252,7 +252,7 @@ class Log implements JsonSerializable {
 	 * @return Log
 	 */
 	public static function jsonDeserialize( array $data ): Log {
-		$messages_json = json_decode( $data['messages'] );
+		$messages_json = json_decode( $data['messages'], true );
 		$messages      = array();
 
 		foreach ( $messages_json as $message ) {

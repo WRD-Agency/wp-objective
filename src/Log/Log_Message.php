@@ -168,7 +168,7 @@ class Log_Message implements JsonSerializable {
 			'id'        => $this->get_id(),
 			'level'     => $this->get_level()->value,
 			'message'   => $this->get_message(),
-			'target'    => $this->get_target(),
+			'target'    => $this->get_target_id(),
 			'data'      => $this->get_data(),
 			'timestamp' => $this->get_timestamp(),
 		);
