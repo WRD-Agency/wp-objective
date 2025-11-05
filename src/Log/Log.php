@@ -32,7 +32,7 @@ class Log implements JsonSerializable {
 	/**
 	 * Targets IDs, in addition to those in log messages.
 	 *
-	 * @var int[]
+	 * @var string[]
 	 */
 	private array $targets = array();
 
@@ -78,7 +78,7 @@ class Log implements JsonSerializable {
 	 *
 	 * @param Log_Message[] $messages The log messages.
 	 *
-	 * @param int[]      $targets Targets IDs, in addition to those in log messages.
+	 * @param string[]      $targets Targets IDs, in addition to those in log messages.
 	 *
 	 * @param Status        $status The log's overall status.
 	 *
@@ -130,11 +130,11 @@ class Log implements JsonSerializable {
 	/**
 	 * Add a target to the log.
 	 *
-	 * @param int $id The ID to target.
+	 * @param string $id The ID to target.
 	 *
 	 * @return void
 	 */
-	public function target( int $id ): void {
+	public function target( string $id ): void {
 		$this->targets[] = $id;
 	}
 
@@ -160,7 +160,7 @@ class Log implements JsonSerializable {
 	/**
 	 * Get all log message targets.
 	 *
-	 * @return Collection<int>
+	 * @return Collection<WP_Post>
 	 */
 	public function get_targets(): Collection {
 		return $this
@@ -251,10 +251,17 @@ class Log implements JsonSerializable {
 	 *
 	 * @return Log
 	 */
-	public function jsonDeserialize( array $data ): Log {
+	public static function jsonDeserialize( array $data ): Log {
+		$messages_json = json_decode( $data['messages'] );
+		$messages      = array();
+
+		foreach ( $messages_json as $message ) {
+			$messages[] = Log_Message::jsonDeserialize( $message );
+		}
+
 		return new Log(
 			id: $data['id'],
-			messages: $data['messages'],
+			messages: $messages,
 			status: Status::from( $data['status'] ),
 			user_ip: $data['user_ip'],
 			user_agent: $data['user_agent'],
