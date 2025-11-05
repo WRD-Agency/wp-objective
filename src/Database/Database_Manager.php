@@ -41,7 +41,18 @@ class Database_Manager {
 	 * @return int|bool Boolean true for CREATE, ALTER, TRUNCATE and DROP queries. Number of rows affected/selected for all other queries. Boolean false on error.
 	 */
 	public function sql( string $sql ): int|bool {
-		return $this->db->query( $sql );
+		return $this->db->query( $sql, OBJECT );
+	}
+
+	/**
+	 * Run a SELECT command.
+	 *
+	 * @param string $sql The SQL command to run.
+	 *
+	 * @return array
+	 */
+	public function select( string $sql ): array {
+		return $this->db->get_results( $sql );
 	}
 
 	/**
