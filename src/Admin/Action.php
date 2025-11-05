@@ -10,7 +10,6 @@ namespace Wrd\WpObjective\Admin;
 use WP_Error;
 use Wrd\WpObjective\Foundation\Service_Provider;
 use Wrd\WpObjective\Log\Log_Manager;
-use Wrd\WpObjective\Log\Log_Message;
 
 /**
  * Base class for actions.
@@ -278,7 +277,9 @@ abstract class Action extends Service_Provider {
 			wp_die( $result ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
-		$loggable_args = array();
+		$loggable_args = array(
+			'action' => static::class,
+		);
 
 		foreach ( $this->get_arguments() as $key => $args ) {
 			if ( isset( $args['log'] ) && true === $args['log'] ) {
