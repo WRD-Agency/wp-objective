@@ -150,13 +150,15 @@ class Html implements Stringable {
 	 *
 	 * @param string[]|string[][] $attrs Array of attributes.
 	 *
-	 * @return void
+	 * @return static
 	 */
-	public function open( string $tag, array $attrs ): void {
+	public function open( string $tag, array $attrs ): static {
 
 		$this->raw( '<' . esc_html( $tag ) . ' ' );
 		$this->raw( $this->flatten_attrs( $attrs ) );
 		$this->raw( '>' );
+
+		return $this;
 	}
 
 	/**
@@ -164,10 +166,12 @@ class Html implements Stringable {
 	 *
 	 * @param string $tag The tag name.
 	 *
-	 * @return void
+	 * @return static
 	 */
-	public function close( string $tag ): void {
+	public function close( string $tag ): static {
 		$this->raw( '</' . esc_html( $tag ) . '>' );
+
+		return $this;
 	}
 
 	/**
