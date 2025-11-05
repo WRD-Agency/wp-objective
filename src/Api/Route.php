@@ -84,30 +84,25 @@ abstract class Route extends Service_Provider {
 				'args'                => $endpoint->get_arguments(),
 				'permission_callback' => array( $endpoint, 'permissions_callback' ),
 				'callback'            => function ( WP_REST_Request $request ) use ( $endpoint ) {
-					$this->logger->add(
-						message: __( 'Started API request.', 'wrd' ),
-						data: array(
-							'route'  => $request->get_route(),
-							'method' => $request->get_method(),
-							'params' => $request->get_params(),
-						)
-					);
-
 					$response = $endpoint->handle( $request );
 
 					if ( is_wp_error( $response ) ) {
+						$loggable_params = array();
+
+						foreach ( $request->get_attributes()['args'] as $key => $args ) {
+							if ( isset( $args['log'] ) && true === $args['log'] ) {
+								$loggable_params[ $key ] = $request->get_param( $key );
+							}
+						}
+
 						$this->logger->add(
 							level: Level::ERROR,
 							message: __( 'API request handler hit an error.', 'wrd' ),
 							data: array(
-								'error' => $response,
-							)
-						);
-					} else {
-						$this->logger->add(
-							message: __( 'API request handled.', 'wrd' ),
-							data: array(
-								'response' => $response,
+								'error'  => $response,
+								'route'  => $request->get_route(),
+								'method' => $request->get_method(),
+								'params' => $loggable_params,
 							)
 						);
 					}
