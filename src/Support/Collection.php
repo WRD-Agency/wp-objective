@@ -325,6 +325,17 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	}
 
 	/**
+	 * Join all elements with a separator.
+	 *
+	 * @param string $separator String to add between each element.
+	 *
+	 * @return string
+	 */
+	public function join( string $separator = '' ): string {
+		return join( $separator, $this->elements );
+	}
+
+	/**
 	 * Create a new collection.
 	 *
 	 * @template TValue
