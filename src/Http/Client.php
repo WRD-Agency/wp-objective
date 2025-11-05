@@ -117,10 +117,8 @@ abstract class Client extends Service_Provider {
 		$this->logger->add(
 			message: __( 'Started HTTP request.', 'wrd' ),
 			data: array(
-				'url'     => $request->get_url(),
-				'method'  => $request->get_method()->value,
-				'headers' => $request->get_headers(),
-				'body'    => $request->get_body(),
+				'url'    => $request->get_url(),
+				'method' => $request->get_method()->value,
 			)
 		);
 
@@ -152,8 +150,6 @@ abstract class Client extends Service_Provider {
 			message: __( 'Completed HTTP request.', 'wrd' ),
 			data: array(
 				'status_code' => $response->get_status_code(),
-				'headers'     => $response->get_headers(),
-				'body'        => $response->get_body(),
 			)
 		);
 
