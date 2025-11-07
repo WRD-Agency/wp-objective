@@ -105,6 +105,19 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	}
 
 	/**
+	 * Get a slice of the items.
+	 * 
+	 * @param int $offset If offset is non-negative, the sequence will start at that offset in the array. If offset is negative, the sequence will start that far from the end of the array.
+	 * 
+	 * @param int|null $length If length is given and is positive, then the sequence will have that many elements in it. If length is given and is negative then the sequence will stop that many elements from the end of the array. If it is omitted, then the sequence will have everything from offset up until the end of the array.
+	 * 
+	 * @return static<T>
+	 */
+	public function slice(int $offset, ?int $length){
+		return new static( array_slice( $this->elements, $offset, $length ) );
+	}
+
+	/**
 	 * Find the first element in the collection to match a criteria.
 	 *
 	 * @param callable(T): bool $callback Callback function.
