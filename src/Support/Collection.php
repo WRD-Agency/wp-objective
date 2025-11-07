@@ -190,11 +190,13 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	/**
 	 * Get a value from a the collection.
 	 *
+	 * @template TFallback
+	 *
 	 * @param string|int|null $key     The key to retrieve.
 	 *
-	 * @param mixed           $fallback The default value to return if the key is not found.
+	 * @param TFallback       $fallback The default value to return if the key is not found.
 	 *
-	 * @return mixed The value from the array or the default value.
+	 * @return T|TFallback The value from the array or the default value.
 	 */
 	public function get( int|string|null $key, mixed $fallback = null ) {
 		if ( is_null( $key ) ) {
