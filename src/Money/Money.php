@@ -79,6 +79,17 @@ class Money implements Apiable {
 	}
 
 	/**
+	 * Get the value as a float.
+	 *
+	 * Due to floating-point inprecision, this is not recommended.
+	 *
+	 * @return float
+	 */
+	public function get_float_amount(): float {
+		return (float) $this->get_amount() / $this->currency->get_decimals();
+	}
+
+	/**
 	 * Get the currency.
 	 *
 	 * @return Currency
@@ -107,6 +118,7 @@ class Money implements Apiable {
 			'formats'  => array(
 				'base_unit' => $this->get_base_unit_amount(),
 				'sub_unit'  => $this->get_sub_unit_amount(),
+				'float'     => $this->get_float_amount(),
 				'long'      => $this->get_formatted(),
 			),
 			'currency' => $this->get_currency(),
