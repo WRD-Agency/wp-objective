@@ -10,6 +10,7 @@ namespace Wrd\WpObjective\Admin;
 use WP_Error;
 use Wrd\WpObjective\Foundation\Service_Provider;
 use Wrd\WpObjective\Log\Log_Manager;
+use Wrd\WpObjective\Support\Validator;
 
 /**
  * Base class for actions.
@@ -59,19 +60,6 @@ abstract class Action extends Service_Provider {
 	}
 
 	/**
-	 * Get the attributes.
-	 *
-	 * Allows us to use some core functions designed for the Rest API to validate and sanitize.
-	 *
-	 * @return array
-	 */
-	public function get_attributes(): array {
-		return array(
-			'args' => $this->get_arguments(),
-		);
-	}
-
-	/**
 	 * Execute the action.
 	 *
 	 * @param array $args The arguments passed to the action.
@@ -79,148 +67,6 @@ abstract class Action extends Service_Provider {
 	 * @return WP_Error|null
 	 */
 	abstract public function handle( array $args ): WP_Error|null;
-
-	/**
-	 * Sanitize the parameters for the action.
-	 *
-	 * @param array $values The values to sanitize.
-	 *
-	 * @return WP_Error|array The sanitized values, or an error if sanitisation failed.
-	 */
-	public function sanitize_params( array $values ): WP_Error|array {
-		$args = $this->get_arguments();
-
-		$sanitized_values = array();
-
-		$invalid_params  = array();
-		$invalid_details = array();
-
-		foreach ( $values as $key => $value ) {
-			if ( ! isset( $args[ $key ] ) ) {
-				// Unknown parameter, skip it.
-				continue;
-			}
-
-			$param_args = $args[ $key ];
-
-			// If the arg has a type but no sanitize_callback attribute, default to rest_parse_request_arg.
-			if ( ! array_key_exists( 'sanitize_callback', $param_args ) && ! empty( $param_args['type'] ) ) {
-				$param_args['sanitize_callback'] = 'rest_parse_request_arg';
-			}
-
-			// If there's still no sanitize_callback, nothing to do here.
-			if ( empty( $param_args['sanitize_callback'] ) ) {
-				continue;
-			}
-
-			/**
-			 * Sanitized value.
-			 *
-			 * @var mixed|WP_Error $sanitized_value
-			 */
-			$sanitized_value = call_user_func( $param_args['sanitize_callback'], $value, $this, $key );
-
-			if ( is_wp_error( $sanitized_value ) ) {
-				$invalid_params[ $key ]  = implode( ' ', $sanitized_value->get_error_messages() );
-				$invalid_details[ $key ] = rest_convert_error_to_response( $sanitized_value )->get_data();
-			} else {
-				$sanitized_values[ $key ] = $sanitized_value;
-			}
-		}
-
-		if ( $invalid_params ) {
-			return new WP_Error(
-				'rest_invalid_param',
-				/* translators: %s: List of invalid parameters. */
-				sprintf( __( 'Invalid parameter(s): %s' ), implode( ', ', array_keys( $invalid_params ) ) ),
-				array(
-					'status'  => 400,
-					'params'  => $invalid_params,
-					'details' => $invalid_details,
-				)
-			);
-		}
-
-		return $sanitized_values;
-	}
-
-	/**
-	 * Validate the parameters for the action.
-	 *
-	 * @param array $values The values to validate.
-	 *
-	 * @return WP_Error|true True if validation passed, or an error if validation failed.
-	 */
-	public function validate_params( array $values ): WP_Error|true {
-		$args = $this->get_arguments();
-
-		$required = array();
-
-		foreach ( $args as $key => $arg ) {
-			$param = $values[ $key ] ?? null;
-			if ( isset( $arg['required'] ) && true === $arg['required'] && null === $param ) {
-				$required[] = $key;
-			}
-		}
-
-		if ( ! empty( $required ) ) {
-			return new WP_Error(
-				'rest_missing_callback_param',
-				/* translators: %s: List of required parameters. */
-				sprintf( __( 'Missing parameter(s): %s' ), implode( ', ', $required ) ),
-				array(
-					'status' => 400,
-					'params' => $required,
-				)
-			);
-		}
-
-		/*
-		 * Check the validation callbacks for each registered arg.
-		 *
-		 * This is done after required checking as required checking is cheaper.
-		 */
-		$invalid_params  = array();
-		$invalid_details = array();
-
-		foreach ( $args as $key => $arg ) {
-
-			$param = $values[ $key ] ?? null;
-
-			if ( null !== $param && ! empty( $arg['validate_callback'] ) ) {
-				/**
-				 * Validation check.
-				 *
-				 * @var bool|\WP_Error $valid_check
-				 */
-				$valid_check = call_user_func( $arg['validate_callback'], $param, $this, $key );
-
-				if ( false === $valid_check ) {
-					$invalid_params[ $key ] = __( 'Invalid parameter.' );
-				}
-
-				if ( is_wp_error( $valid_check ) ) {
-					$invalid_params[ $key ]  = implode( ' ', $valid_check->get_error_messages() );
-					$invalid_details[ $key ] = rest_convert_error_to_response( $valid_check )->get_data();
-				}
-			}
-		}
-
-		if ( $invalid_params ) {
-			return new WP_Error(
-				'rest_invalid_param',
-				/* translators: %s: List of invalid parameters. */
-				sprintf( __( 'Invalid parameter(s): %s' ), implode( ', ', array_keys( $invalid_params ) ) ),
-				array(
-					'status'  => 400,
-					'params'  => $invalid_params,
-					'details' => $invalid_details,
-				)
-			);
-		}
-
-		return true;
-	}
 
 	/**
 	 * Handle the action if triggered.
@@ -249,9 +95,12 @@ abstract class Action extends Service_Provider {
 			wp_die( $capability_check ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
+		$args      = $this->get_arguments();
+		$validator = new Validator( $args );
+
 		// Sanitize inputs.
 		$values = wp_unslash( $_REQUEST ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$values = $this->sanitize_params( $values );
+		$values = $validator->sanitize( $values );
 
 		if ( is_wp_error( $values ) ) {
 			// Values could not be sanitized.
@@ -260,12 +109,12 @@ abstract class Action extends Service_Provider {
 		}
 
 		// Validate inputs.
-		$validation = $this->validate_params( $values );
+		$is_valid = $validator->validate( $values );
 
-		if ( is_wp_error( $validation ) ) {
+		if ( is_wp_error( $is_valid ) ) {
 			// Values did not validate.
-			$this->logger->add_wp_error( $validation );
-			wp_die( $validation ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
+			$this->logger->add_wp_error( $is_valid );
+			wp_die( $is_valid ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
 		// Run the action.
