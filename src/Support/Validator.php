@@ -89,7 +89,7 @@ class Validator {
 				 *
 				 * @var bool|\WP_Error $valid_check
 				 */
-				$valid_check = call_user_func( $arg['validate_callback'], $value, $this, $key );
+				$valid_check = call_user_func( $arg['validate_callback'], $value, $values, $key );
 
 				if ( false === $valid_check ) {
 					$invalid_params[ $key ] = __( 'Invalid parameter.' );
@@ -141,10 +141,18 @@ class Validator {
 
 			// If the arg has a type but no sanitize_callback attribute, default to rest_sanitize_value_from_schema.
 			if ( ! array_key_exists( 'sanitize_callback', $param_args ) && ! empty( $param_args['type'] ) ) {
-				$param_args['sanitize_callback'] = 'rest_sanitize_value_from_schema';
+				$sanitized_value = rest_sanitize_value_from_schema( $value, $param_args, $key );
+
+				if ( is_wp_error( $sanitized_value ) ) {
+					$invalid_params[ $key ]  = implode( ' ', $sanitized_value->get_error_messages() );
+					$invalid_details[ $key ] = rest_convert_error_to_response( $sanitized_value )->get_data();
+				} else {
+					$sanitized_values[ $key ] = $sanitized_value;
+				}
+				continue;
 			}
 
-			// If there's still no sanitize_callback, nothing to do here.
+			// If there's no sanitize_callback, nothing to do here.
 			if ( empty( $param_args['sanitize_callback'] ) ) {
 				continue;
 			}
@@ -154,7 +162,7 @@ class Validator {
 			 *
 			 * @var mixed|WP_Error $sanitized_value
 			 */
-			$sanitized_value = call_user_func( $param_args['sanitize_callback'], $value, $param_args, $key );
+			$sanitized_value = call_user_func( $param_args['sanitize_callback'], $value, $values, $key );
 
 			if ( is_wp_error( $sanitized_value ) ) {
 				$invalid_params[ $key ]  = implode( ' ', $sanitized_value->get_error_messages() );
