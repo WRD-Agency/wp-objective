@@ -125,6 +125,17 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	}
 
 	/**
+	 * Check if a value exists in this collection.
+	 *
+	 * @param T $needle The value to check for.
+	 *
+	 * @return bool
+	 */
+	public function includes( $needle ): bool {
+		return in_array( $needle, $this->elements, true );
+	}
+
+	/**
 	 * Get the first element in the collection.
 	 *
 	 * @return T
@@ -198,7 +209,7 @@ class Collection implements IteratorAggregate, Apiable, JsonSerializable {
 	 *
 	 * @return T|TFallback The value from the array or the default value.
 	 */
-	public function get( int|string|null $key, mixed $fallback = null ) {
+	public function get( int|string|null $key, $fallback = null ) {
 		if ( is_null( $key ) ) {
 			return null;
 		}
