@@ -1,0 +1,723 @@
+#!/usr/bin/env php
+<?php
+/**
+ * CLI command for creating a new block directory.
+ *
+ * @package wrd/wp-objective
+ */
+
+use Ahc\Cli\Application;
+use Ahc\Cli\IO\Interactor;
+use Ahc\Cli\Output\Writer;
+
+require_once $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
+
+/**
+ * Convert to Ada_Case.
+ *
+ * @param string  $input The input.
+ *
+ * @param ?string $suffix Suffix to require.
+ *
+ * @return string
+ */
+function to_ada_case( string $input, ?string $suffix = null ): string {
+	$input = strtolower( $input );
+	$input = str_replace( '_', ' ', $input );
+	$input = str_replace( '-', ' ', $input );
+	$input = str_replace( '.', ' ', $input );
+	$input = ucwords( $input );
+	$input = str_replace( ' ', '_', $input );
+
+	if ( $suffix && ! str_ends_with( $input, $suffix ) ) {
+		$input .= $suffix;
+	}
+
+	return $input;
+}
+
+/**
+ * Generate a class in the user's project.
+ *
+ * @param string   $template The template to copy.
+ *
+ * @param string   $destination The destination to place the new file into.
+ *
+ * @param string[] $replacements Any replacements to substitute into the template.
+ *
+ * @return bool
+ */
+function generate_file( string $template, string $destination, array $replacements = array() ): bool {
+	$writer = new Writer();
+
+	$replacements     = array_merge( get_composer_replacements(), $replacements );
+
+	if ( file_exists( $destination ) ) {
+		$writer->error( "A file already exists at '$destination'." );
+		return false;
+	}
+
+	if ( ! file_exists( $template ) ) {
+		$writer->error( "The template file could not be found at '$template'." );
+		return false;
+	}
+
+	$file_contents = file_get_contents( $template ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+	if ( ! $file_contents ) {
+		$writer->error( 'The template could not be opened.' );
+		return false;
+	}
+
+	foreach ( $replacements as $find => $replace ) {
+		$file_contents = str_replace( $find, $replace, $file_contents );
+	}
+
+	$dirname = dirname( $destination );
+
+	if ( ! file_exists( $dirname ) ) {
+		$mkdir_success = mkdir( $dirname, 0777, true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir
+
+		if ( ! $mkdir_success ) {
+			$writer->error( 'Could not create directory structure for file.' );
+			return false;
+		}
+	} elseif ( ! is_dir( $dirname ) ) {
+		$writer->error( 'File exists in directory position.' );
+		return false;
+	}
+
+	$success = file_put_contents( $destination, $file_contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+
+	if ( ! $success ) {
+		$writer->error( 'The contents could not be written to the file.' );
+		return false;
+	}
+
+	$writer->ok( "File created: $destination", true );
+
+	return true;
+}
+
+/**
+ * Get the contents of the current project's composer JSON.
+ *
+ * @return stdClass|false
+ */
+function get_composer_json(): stdClass|false {
+	static $cache = null;
+
+	if ( null !== $cache ) {
+		return $cache;
+	}
+
+	$cwd = getcwd();
+
+	if ( ! $cwd ) {
+		return false;
+	}
+
+	$composer_file = $cwd . DIRECTORY_SEPARATOR . 'composer.json';
+
+	if ( ! file_exists( $composer_file ) ) {
+		return false;
+	}
+
+	$json = file_get_contents( $composer_file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+	if ( ! $json ) {
+		return false;
+	}
+
+	$data = json_decode( $json );
+
+	if ( ! $data || ! is_object( $data ) ) {
+		return false;
+	}
+
+	$cache = $data;
+
+	return $data;
+}
+
+/**
+ * Set the Composer JSON.
+ *
+ * @param stdClass $json The new JSON.
+ *
+ * @return bool
+ */
+function update_composer_json( stdClass $json ): bool {
+	$writer             = new Writer();
+	$composer_file_path = getcwd() . DIRECTORY_SEPARATOR . 'composer.json';
+
+	if ( ! file_exists( $composer_file_path ) ) {
+		return false;
+	}
+
+	$file_contents = json_encode( $json, JSON_PRETTY_PRINT ); // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+	$success       = file_put_contents( $composer_file_path, $file_contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+
+	if ( ! $success ) {
+		$writer->error( "The 'composer.json' file could not be updated." );
+		return false;
+	}
+
+	$writer->ok( "Updated 'composer.json'.", true );
+	return true;
+}
+
+/**
+ * Get the app's namespace.
+ *
+ * @return string
+ */
+function get_app_namespace(): string {
+	$composer  = get_composer_json();
+	$namespace = 'App';
+
+	if ( is_object( $composer->autoload?->{'psr-4'} ) ) {
+		foreach ( $composer->autoload->{'psr-4'} as $ns => $dir ) {
+			if ( 'src/' === $dir ) {
+				$namespace = rtrim( $ns, '\\\/' );
+				break;
+			}
+		}
+	}
+
+	return $namespace;
+}
+
+/**
+ * Get the common replacements for templates.
+ *
+ * @return array
+ */
+function get_composer_replacements(): array {
+	$writer   = new Writer();
+	$composer = get_composer_json();
+
+	if ( ! $composer ) {
+		$writer->warn( 'Could not load composer.json for default template replacements.', true );
+		return array(
+			'PACKAGE_NAMESPACE' => 'App',
+			'PACKAGE_NAME'      => 'app',
+			'PACKAGE_VERSION'   => '1.0.0',
+		);
+	}
+
+	$namespace = get_app_namespace();
+
+	if ( 'App' === $namespace ) {
+		$writer->warn( "Could not find PSR-4 namespace for 'src/' directory. Defaulting to App\\.", true );
+	}
+
+	return array(
+		'PACKAGE_NAMESPACE' => $namespace,
+		'PACKAGE_NAME'      => $composer?->name,
+		'PACKAGE_VERSION'   => $composer?->version,
+	);
+}
+
+/**
+ * Get the app's plugin class name.
+ *
+ * @return string
+ */
+function get_app_plugin_class_name(): string {
+	$writer            = new Writer();
+	$plugin_class_name = 'Plugin';
+	$composer          = get_composer_json();
+
+	if ( isset( $composer->extra->objective->plugin ) ) {
+		$plugin_class_name = $composer->extra->objective->plugin;
+	} else {
+		$writer->warn( "Could not find a plugin class name under 'composer.json->extra->objective->plugin'. Defaulting to 'Plugin'.", true );
+	}
+
+	return qualify_class( $plugin_class_name );
+}
+
+/**
+ * Get the filepath to the app's plugin.
+ * 
+ * @return string
+ */
+function get_app_plugin_file_path(): string {
+	return get_class_file_path( get_app_plugin_class_name() );
+}
+
+/**
+ * Get the filepath for a class.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return string
+ */
+function get_class_file_path( string $class_name ): string {
+	$class_name = str_replace( get_app_namespace(), '', $class_name );
+
+	$class_path = str_replace( '\\', DIRECTORY_SEPARATOR, $class_name );
+
+	return getcwd() . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . ltrim( $class_path, DIRECTORY_SEPARATOR ) . '.php';
+}
+
+/**
+ * Get the basename of a class.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return string
+ */
+function get_class_basename( string $class_name ): string {
+	return basename( str_replace( '\\', '/', $class_name ) );
+}
+
+/**
+ * Check if a given class is qualified in the App's namespace.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return bool
+ */
+function is_class_qualified( string $class_name ): bool {
+	return str_starts_with( $class_name, get_app_namespace() );
+}
+
+/**
+ * Qualify a class in the App's namespace.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return string
+ */
+function qualify_class( string $class_name ): string {
+	if ( is_class_qualified( $class_name ) ) {
+		return $class_name;
+	}
+
+	return get_app_namespace() . '\\' . $class_name;
+}
+
+/**
+ * Add a value to the plugin's default value for an array property.
+ * 
+ * This is a long and awful function.
+ * 
+ * @param string $property The property name.
+ * 
+ * @param string $value The value to add.
+ * 
+ * @return bool
+ */
+function add_plugin_property_array_value( string $property, string $value ): bool {
+	$writer = new Writer();
+
+	$plugin_class     = get_app_plugin_class_name();
+	$plugin_file_path = get_app_plugin_file_path();
+
+	if ( ! file_exists( $plugin_file_path ) ) {
+		$writer
+			->error( 'Could not find Plugin class definition.', true )
+			->comment( $plugin_file_path );
+
+		return false;
+	}
+
+	$reflection = new ReflectionClass( $plugin_class );
+
+	if ( ! $reflection->hasProperty( $property ) ) {
+		$writer->error( "The plugin does not have a '$property' property." );
+		return false;
+	}
+
+	$providers_property = $reflection->getProperty( $property );
+
+	if ( ! $providers_property->hasDefaultValue() ) {
+		$writer->error( "The '$property' property must have a default value." );
+		return false;
+	}
+
+	$values = $providers_property->getDefaultValue();
+
+	if ( ! is_array( $values ) ) {
+		$writer->error( "The default value of the '$property' property must be an array." );
+		return false;
+	}
+
+	$values[] = $value;
+	sort( $values );
+
+	$plugin_file_lines               = new SplFileObject( $plugin_file_path );
+	$new_plugin_file_contents        = '';
+	$new_plugin_file_content_lines   = 0;
+	$was_within_providers_definition = false;
+	$is_within_providers_definition  = false;
+
+	foreach ( $plugin_file_lines as $line ) {
+		if ( ! $is_within_providers_definition ) {
+			// Look for start of declaration - if we haven't already found it.
+			if ( ! $was_within_providers_definition && preg_match( '/protected(\sarray)?\s\$providers/x', $line ) ) {
+				$is_within_providers_definition  = true;
+				$was_within_providers_definition = true;
+
+				$indent_depth = substr_count( $line, "\t" );
+				$indent       = str_repeat( "\t", $indent_depth );
+
+				// Add new provider definition.
+				$new_plugin_file_contents .= $indent . 'protected array $providers = array(' . PHP_EOL;
+				++$new_plugin_file_content_lines;
+
+				foreach ( $values as $value ) {
+					$new_plugin_file_contents .= $indent . "\t" . $value . ',' . PHP_EOL;
+					++$new_plugin_file_content_lines;
+				}
+
+				$new_plugin_file_contents .= $indent . ');' . PHP_EOL;
+				++$new_plugin_file_content_lines;
+			} else {
+				$new_plugin_file_contents .= $line;
+				++$new_plugin_file_content_lines;
+			}
+		}
+
+		// Important: We can use elseif in-case the array definition is all on this same line.
+		if ( $is_within_providers_definition ) {
+			// Look for end of array.
+			if ( preg_match( '/(\]\;)|(\);)/x', $line ) ) {
+				$is_within_providers_definition = false;
+			}
+		}
+	}
+
+	if ( $is_within_providers_definition ) {
+		$writer->error( 'Could not find the end of the definition for Plugin property. Aborting for safety.' );
+		return false;
+	}
+
+	if ( ! $was_within_providers_definition ) {
+		$writer->error( 'Could not find definition for Plugin property.' );
+		return false;
+	}
+
+	if ( ! $new_plugin_file_contents ) {
+		$writer->error( 'Could not generate updated plugin file.' );
+		return false;
+	}
+
+	$plugin_file_lines->seek( PHP_INT_MAX );
+
+	if ( $new_plugin_file_content_lines < $plugin_file_lines->key() ) {
+		$writer->error( 'The updated plugin file has less lines than the original file. Aborting for safety.' );
+		return false;
+	}
+
+	$success = file_put_contents( $plugin_file_path, $new_plugin_file_contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+
+	if ( ! $success ) {
+		$writer->error( 'The new Plugin contents could not be written to the file.' );
+		return false;
+	}
+
+	$writer->ok( 'Updated Plugin file.', true );
+
+	return true;
+}
+
+/**
+ * Adds a service provider to the cwd's plugin.
+ *
+ * @param string $class_name The class to add.
+ *
+ * @return bool
+ */
+function add_service_provider( string $class_name ): bool {
+	$class_name = qualify_class( $class_name );
+	return add_plugin_property_array_value( 'providers', '\\' . $class_name . '::class' );
+}
+
+/**
+ * Adds a migration to the cwd's plugin.
+ *
+ * @param string $class_name The class to add.
+ *
+ * @return bool
+ */
+function add_migration( string $class_name ): bool {
+	$class_name = qualify_class( $class_name );
+	return add_plugin_property_array_value( 'migrations', '\\' . $class_name . '::class' );
+}
+
+/**
+ * Generate the Plugin class.
+ *
+ * @param string $template_file_path Path to the template.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return bool
+ */
+function generate_plugin( string $template_file_path, string $class_name ): bool {
+	$file_path      = get_class_file_path( $class_name );
+	$class_basename = get_class_basename( $class_name );
+	$composer       = get_composer_json();
+
+	$success = generate_file(
+		$template_file_path,
+		$file_path,
+		array(
+			'CLASS_NAME' => $class_basename,
+		)
+	);
+
+	if ( ! $success ) {
+		return false;
+	}
+
+	if ( ! isset( $composer->extra ) ) {
+		$composer->extra = new stdClass();
+	}
+
+	if ( ! isset( $composer->extra->objective ) ) {
+		$composer->extra->objective = new stdClass();
+	}
+
+	$composer->extra->objective->plugin = qualify_class( $class_name );
+
+	return update_composer_json( $composer );
+}
+
+/**
+ * Generate a service provider file and add it to the plugin.
+ *
+ * @param string $template_file_path Path to the template.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return bool
+ */
+function generate_service_provider( string $template_file_path, string $class_name ): bool {
+	$file_path      = get_class_file_path( $class_name );
+	$class_basename = get_class_basename( $class_name );
+
+	$success = generate_file(
+		$template_file_path,
+		$file_path,
+		array(
+			'CLASS_NAME' => $class_basename,
+		)
+	);
+
+	if ( ! $success ) {
+		return false;
+	}
+
+	$success = add_service_provider( $class_name );
+
+	return $success;
+}
+
+/**
+ * Generate a migration file and add it to the plugin.
+ *
+ * @param string $template_file_path Path to the template.
+ *
+ * @param string $class_name The class name.
+ *
+ * @return bool
+ */
+function generate_migration(): bool {
+	$composer = get_composer_json();
+	$class_name = 'Migrations\\' . to_ada_case( 'V' . $composer->version, '_Migration' );
+	$template_file_path = __DIR__ . '/Gen/Migration.php';
+
+	$file_path      = get_class_file_path( $class_name );
+	$class_basename = get_class_basename( $class_name );
+
+	$success = generate_file(
+		$template_file_path,
+		$file_path,
+		array(
+			'CLASS_NAME' => $class_basename,
+		)
+	);
+
+	if ( ! $success ) {
+		return false;
+	}
+
+	$success = add_migration( $class_name );
+
+	return $success;
+}
+
+/**
+ * The main CLI loop.
+ *
+ * @return void
+ */
+function main(): void {
+	$app = new Application( 'Objective', '1.0.0' );
+
+	$app
+		->command( 'gen:plugin', 'Generate your Plugin class.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_plugin(
+						__DIR__ . '/Gen/Plugin.php',
+						to_ada_case( $name, '_Plugin' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:action', 'Generate a new Action.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/Action.php',
+						'Admin\\Actions\\' . to_ada_case( $name, '_Action' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:job', 'Generate a new Job.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/Job.php',
+						'Admin\\Jobs\\' . to_ada_case( $name, '_Job' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:list_table', 'Generate a new List_Table.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/List_Table.php',
+						'Admin\\List_Tables\\' . to_ada_case( $name, '_List_Table' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:metabox', 'Generate a new Metabox.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/Metabox.php',
+						'Admin\\Metaboxs\\' . to_ada_case( $name, '_Metabox' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:notice', 'Generate a new Notice.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/Notice.php',
+						'Admin\\Notices\\' . to_ada_case( $name, '_Notice' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:screen', 'Generate a new Screen.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					generate_service_provider(
+						__DIR__ . '/Gen/Screen.php',
+						'Admin\\Screens\\' . to_ada_case( $name, '_Screen' ),
+					);
+				}
+			)
+			->tap()
+		->command( 'gen:route', 'Not Implemented: Generate a new Route.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.'); // TODO: Utility for Post_Type_Routes.
+				}
+			)
+			->tap()
+		->command( 'gen:endpoint', 'Not Implemented: Generate a new Endpoint.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap()
+		->command( 'gen:migration', 'Generate a new Migration.' )
+			->action(
+				function () {
+					generate_migration();
+				}
+			)
+			->tap()
+		->command( 'gen:service_provider', 'Not Implemented: Generate a new Service_Provider.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap()
+		->command( 'gen:client', 'Not Implemented: Generate a new HTTP Client.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap()
+		->command( 'gen:post', 'Not Implemented: Generate a new Post.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.'); // TODO: With Post_Type utility.
+				}
+			)
+			->tap()
+		->command( 'gen:post_type', 'Not Implemented: Generate a new Post_Type.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.'); // TODO: Generate Post utility.
+				}
+			)
+			->tap()
+		->command( 'gen:post_status', 'Not Implemented: Generate a new Post_Status.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap()
+		->command( 'gen:asset', 'Not Implemented: Generate a new Asset.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap()
+		->command( 'gen:template', 'Not Implemented: Generate a new Template.' )
+			->arguments( '<name>' )
+			->action(
+				function ( string $name ) {
+					throw new Exception('Not Implemented.');
+				}
+			)
+			->tap();
+
+	$app->io( new Interactor() );
+	$app->handle( $_SERVER['argv'] ); // phpcs:ignore -- CLI
+}
+main();

@@ -21,7 +21,8 @@
 	],
 	"require": {
 		"php": "^8.3.0",
-		"phpdocumentor/reflection-docblock": "^5.6"
+		"phpdocumentor/reflection-docblock": "^5.6",
+		"adhocore/cli": "v1.0.0"
 	},
 	"scripts": {
 		"doc-facades": "Wrd\\WpObjective\\Scripts\\Doc_Facades_Script::handle"
@@ -34,5 +35,8 @@
 		"allow-plugins": {
 			"pestphp/pest-plugin": true
 		}
-	}
+	},
+	"bin": [
+		"bin/objective"
+	]
 }
