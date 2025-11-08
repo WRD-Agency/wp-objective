@@ -5,7 +5,7 @@
  * @package wrd/wp-objective
  */
 
-namespace Wrd\WpObjective\Posts;
+namespace Wrd\WpObjective\Public;
 
 use Wrd\WpObjective\Foundation\Service_Provider;
 use Wrd\WpObjective\Support\Condition;
