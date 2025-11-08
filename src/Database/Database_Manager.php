@@ -230,6 +230,7 @@ class Database_Manager {
 	 * @return Query
 	 */
 	public function query( string $table ): Query {
+		trigger_error( 'The QueryBuilder is currently unstable.' );
 		return ( new Query( $this ) )->table( $table );
 	}
 
