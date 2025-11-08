@@ -9,6 +9,7 @@ namespace Wrd\WpObjective\Admin\Post_States;
 
 use WP_Post;
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Posts\Post;
 
 /**
  * Class for adding custom post states.
@@ -35,11 +36,11 @@ abstract class Post_State extends Service_Provider {
 	/**
 	 * Check if a post has this state.
 	 *
-	 * @param int|WP_Post $post The post to check.
+	 * @param int|WP_Post|Post $post The post to check.
 	 *
 	 * @return bool
 	 */
-	abstract public function has_state( int|WP_Post $post ): bool;
+	abstract public function has_state( int|WP_Post|Post $post ): bool;
 
 	/**
 	 * Initalize the post state.
@@ -53,13 +54,13 @@ abstract class Post_State extends Service_Provider {
 	/**
 	 * Filters the default post display states used in the posts list table.
 	 *
-	 * @param string[] $post_states An array of post display states.
+	 * @param string[]     $post_states An array of post display states.
 	 *
-	 * @param \WP_Post $post        The current post object.
+	 * @param WP_Post|Post $post        The current post object.
 	 *
 	 * @return string[] An array of post display states.
 	 */
-	public function append_state( array $post_states, \WP_Post $post ): array {
+	public function append_state( array $post_states, WP_Post|Post $post ): array {
 		if ( $this->has_state( $post ) ) {
 			$post_states[ $this->get_id() ] = $this->get_label();
 		}

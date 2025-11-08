@@ -7,9 +7,14 @@
 
 namespace Wrd\WpObjective\Support;
 
-use Closure;
 use Exception;
-use Wrd\WpObjective\Support\Facades\Plugin;
+use WP_Post;
+use Wrd\WpObjective\Admin\Action;
+use Wrd\WpObjective\Admin\Post_States\Special_Page_Post_State;
+use Wrd\WpObjective\Admin\Screen;
+use Wrd\WpObjective\Posts\Post;
+use Wrd\WpObjective\Posts\Post_Status;
+use Wrd\WpObjective\Posts\Post_Type;
 
 /**
  * Used for building up a conditional check.
@@ -272,34 +277,112 @@ class Condition {
 	/**
 	 * Check if the current post type is given.
 	 *
-	 * @param string|array $post_type The post type, or types, to check for.
+	 * @param string|Post_Type|(string|Post_Type)[] $post_type The post type, or types, to check for.
 	 *
 	 * @return static
 	 */
-	public function is_post_type( string|array $post_type ): static {
+	public function is_post_type( string|Post_Type|array $post_type ): static {
+		if ( ! is_array( $post_type ) ) {
+			$post_type = array( $post_type );
+		}
+
+		foreach ( $post_type as $i => $type ) {
+			if ( is_a( $type, Post_Type::class, true ) ) {
+				if ( is_object( $type ) ) {
+					$post_type[ $i ] = $type->get_name();
+				} else {
+					$post_type[ $i ] = $type::make()->get_name();
+				}
+			}
+		}
+
 		return $this->in_array( get_post_type(), $post_type );
 	}
 
 	/**
 	 * Check if the current post status is given.
 	 *
-	 * @param string|array $post_status The post status, or statii, to check for.
+	 * @param string|class-string<Post_Status>|Post_Status|(string|class-string<Post_Status>|Post_Status)[] $post_status The post status, or statii, to check for.
 	 *
 	 * @return static
 	 */
 	public function is_post_status( string|array $post_status ): static {
+		if ( ! is_array( $post_status ) ) {
+			$post_status = array( $post_status );
+		}
+
+		foreach ( $post_status as $i => $status ) {
+			if ( is_a( $status, Post_Status::class, true ) ) {
+				if ( is_object( $status ) ) {
+					$post_status[ $i ] = $status->get_name();
+				} else {
+					$post_status[ $i ] = $status::make()->get_name();
+				}
+			}
+		}
+
 		return $this->in_array( get_post_status(), $post_status );
 	}
 
 	/**
 	 * Check if the current page is a singular for a post type.
 	 *
+	 * @param string|string[] $post_types Optional. Post type or array of post types to check against. Default empty.
+	 *
 	 * @see 'is_singular'
 	 *
 	 * @return static
 	 */
-	public function is_singular(): static {
-		return $this->is( is_singular() );
+	public function is_singular( $post_types = '' ): static {
+		return $this->is( is_singular( $post_types ) );
+	}
+
+	/**
+	 * Checks if the request is for a single post.
+	 *
+	 * @param int|WP_Post $post The post.
+	 *
+	 * @return static
+	 */
+	public function is_post( int|WP_Post|Post $post ): static {
+		$post = Post::get_post( $post );
+
+		if ( ! $post ) {
+			return $this->is( false );
+		}
+
+		return $this->is( get_the_ID() === $post->get_id() );
+	}
+
+	/**
+	 * Check if the current post is a descendent of another post.
+	 *
+	 * @param int|WP_Post|Post $post The post.
+	 *
+	 * @return static
+	 */
+	public function is_child_of( int|WP_Post|Post $post ): static {
+		$parent = Post::get_post( $post )?->get_parent();
+
+		if ( ! $parent ) {
+			return $this->is( false );
+		}
+
+		return $this->is_post( $parent );
+	}
+
+	/**
+	 * Check if the current post is a descendent of another post.
+	 *
+	 * @param int|WP_Post $post The post.
+	 *
+	 * @return static
+	 */
+	public function is_descendent_of( int|WP_Post $post ): static {
+		$post      = get_post( $post );
+		$ancestors = get_post_ancestors( $post );
+
+		return $this->in_array( $post->ID, $ancestors, true );
 	}
 
 	/**
@@ -318,19 +401,21 @@ class Condition {
 	 *
 	 * Includes core taxonomies ('tag' and 'category') in the check.
 	 *
-	 * @param ?string $tax Taxonomies to check for.
+	 * @param ?string                   $tax Taxonomies to check for.
+	 *
+	 * @param int|string|int[]|string[] $term Optional. Term ID, name, slug, or array of such to check against. Default empty.
 	 *
 	 * @see 'is_tax'
 	 *
 	 * @return static
 	 */
-	public function is_tax( ?string $tax = null ): static {
+	public function is_tax( ?string $tax = null, int|string|array $term = '' ): static {
 		if ( 'category' === $tax ) {
-			return $this->is( is_category() );
+			return $this->is( is_category( $term ) );
 		} elseif ( 'post_tag' === $tax ) {
-			return $this->is( is_tag() );
+			return $this->is( is_tag( $term ) );
 		} elseif ( ! is_null( $tax ) ) {
-			return $this->is( is_tax( $tax ) );
+			return $this->is( is_tax( $tax, $term ) );
 		}
 
 		return $this->is( is_tax() || is_category() || is_tag() );
@@ -344,15 +429,15 @@ class Condition {
 	 * @see 'is_post_type_archive'
 	 * @see 'is_home'
 	 *
-	 * @param ?string $post_type The post type to check for.
+	 * @param string|string[]|null $post_types The post type to check for.
 	 *
 	 * @return static
 	 */
-	public function is_post_type_archive( ?string $post_type = null ): static {
-		if ( 'post' === $post_type ) {
+	public function is_post_type_archive( ?string $post_types = null ): static {
+		if ( 'post' === $post_types ) {
 			return $this->is( is_home() );
-		} elseif ( ! is_null( $post_type ) ) {
-			return $this->is( is_post_type_archive() );
+		} elseif ( ! is_null( $post_types ) ) {
+			return $this->is( is_post_type_archive( $post_types ) );
 		}
 
 		return $this->is( is_post_type_archive() || is_home() );
@@ -376,12 +461,16 @@ class Condition {
 	 *
 	 * @see Special_Page_Post_State
 	 *
-	 * @param class-string<\Wrd\WpObjective\Admin\Post_States\Special_Page_Post_State> $class_name Class name, extending 'Special_Page_Post_State'.
+	 * @param class-string<Special_Page_Post_State>|Special_Page_Post_State $state The post state, extending 'Special_Page_Post_State'.
 	 *
 	 * @return static
 	 */
-	public function is_special_page( $class_name ): static {
-		return $this->is( Plugin::make( $class_name )->get_post_id() === get_the_ID() );
+	public function is_special_page( string|Special_Page_Post_State $state ): static {
+		if ( is_string( $state ) ) {
+			$state = $state::make();
+		}
+
+		return $this->is( $state->has_state() );
 	}
 
 	/**
@@ -389,12 +478,16 @@ class Condition {
 	 *
 	 * @see Action
 	 *
-	 * @param class-string<\Wrd\WpObjective\Admin\Action> $class_name Class name, extending 'Action'.
+	 * @param class-string<Action>|Action $action The action, extending 'Action'.
 	 *
 	 * @return static
 	 */
-	public function is_action( $class_name ): static {
-		return $this->is( Plugin::make( $class_name )->is_requested() );
+	public function is_action( string|Action $action ): static {
+		if ( is_string( $action ) ) {
+			$action = $action::make();
+		}
+
+		return $this->is( $action->is_requested() );
 	}
 
 	/**
@@ -402,11 +495,33 @@ class Condition {
 	 *
 	 * @see Screen
 	 *
-	 * @param class-string<\Wrd\WpObjective\Admin\Screen> $class_name Class name, extending 'Screen'.
+	 * @param class-string<Screen>|Screen $screen The screen class/object, extending 'Screen'.
 	 *
 	 * @return static
 	 */
-	public function is_screen( $class_name ): static {
-		return $this->is_admin()->is( Plugin::make( $class_name )->is_current_screen() );
+	public function is_screen( string|Screen $screen ): static {
+		if ( is_string( $screen ) ) {
+			$screen = $screen::make();
+		}
+
+		return $this->is_admin()->is( $screen->is_current_screen() );
+	}
+
+	/**
+	 * Check if the currently requested URL matches a pattern.
+	 *
+	 * Accepts '*' for wildcard routes.
+	 *
+	 * @param string $route The route.
+	 *
+	 * @return static
+	 *
+	 * @see 'fnmatch'
+	 */
+	public function is_route( string $route ): static {
+		global $wp;
+		$current_route = '/' . trim( $wp->request, '//' ) . '/';
+
+		return $this->is( fnmatch( $route, $current_route ) );
 	}
 }

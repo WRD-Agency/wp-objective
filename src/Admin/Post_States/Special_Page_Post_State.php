@@ -8,6 +8,7 @@
 namespace Wrd\WpObjective\Admin\Post_States;
 
 use WP_Post;
+use Wrd\WpObjective\Posts\Post;
 use Wrd\WpObjective\Support\Settings_Manager;
 
 /**
@@ -58,30 +59,30 @@ abstract class Special_Page_Post_State extends Post_State {
 	/**
 	 * Get the special page.
 	 *
-	 * @return ?WP_Post
+	 * @return ?Post
 	 */
-	public function get_post(): ?WP_Post {
+	public function get_post(): ?Post {
 		if ( ! $this->has_post() ) {
 			return null;
 		}
 
-		return get_post( $this->get_post_id() );
+		return Post::get_post( $this->get_post_id() );
 	}
 
 	/**
 	 * Check if a post has this state.
 	 *
-	 * @param int|WP_Post|null $post The post to check. Defaults to global post.
+	 * @param int|WP_Post|Post|null $post The post to check. Defaults to global post.
 	 *
 	 * @return bool
 	 */
-	public function has_state( int|WP_Post|null $post = null ): bool {
-		$post = get_post( $post );
+	public function has_state( int|WP_Post|Post|null $post = null ): bool {
+		$post = Post::get_post( $post );
 
 		if ( ! $post ) {
 			return false;
 		}
 
-		return $this->get_post_id() === $post->ID;
+		return $this->get_post_id() === $post->get_id();
 	}
 }
