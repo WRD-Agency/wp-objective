@@ -160,9 +160,9 @@ class Log implements JsonSerializable {
 	/**
 	 * Get all log message targets.
 	 *
-	 * @return Collection<WP_Post>
+	 * @return Collection<int>
 	 */
-	public function get_targets(): Collection {
+	public function get_target_ids(): Collection {
 		return $this
 			->get_messages()
 			->map( fn( Log_Message $message ) => $message->get_target_id() )

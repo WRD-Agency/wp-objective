@@ -14,7 +14,7 @@ use Wrd\WpObjective\Support\Collection;
 /**
  * For building up a post type.
  */
-abstract class Post_Type extends Service_Provider {
+class Post_Type extends Service_Provider {
 	/**
 	 * Get this class' post type.
 	 *
@@ -29,7 +29,9 @@ abstract class Post_Type extends Service_Provider {
 	 *
 	 * @return string
 	 */
-	abstract public static function get_post_class(): string;
+	public static function get_post_class(): string {
+		return Post::class;
+	}
 
 	/**
 	 * Get the related Post instance for this type.

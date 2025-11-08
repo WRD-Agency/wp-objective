@@ -10,7 +10,6 @@ namespace Wrd\WpObjective\Log;
 use DateTime;
 use JsonSerializable;
 use WP_Error;
-use WP_Post;
 
 /**
  * Class for holding log data.
@@ -120,15 +119,6 @@ class Log_Message implements JsonSerializable {
 	 */
 	public function get_target_id(): ?int {
 		return $this->target;
-	}
-
-	/**
-	 * Get the log target.
-	 *
-	 * @return ?WP_Post
-	 */
-	public function get_target(): ?WP_Post {
-		return $this->target ? get_post( $this->target ) : null;
 	}
 
 	/**

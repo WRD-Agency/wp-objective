@@ -18,7 +18,7 @@ use Wrd\WpObjective\Support\Image;
 /**
  * For building up a post.
  */
-abstract class Post implements Apiable {
+class Post implements Apiable {
 	/**
 	 * The post ID.
 	 *
@@ -36,8 +36,16 @@ abstract class Post implements Apiable {
 	public function __construct( int|WP_Post|null $post = null ) {
 		$post = get_post( $post );
 
-		if ( ! $post || $this->get_post_type() !== $post->post_type ) {
-			throw new Exception( 'Invalid post type.' );
+		if ( static::class !== self::class ) {
+			// This is an inheriting class.
+
+			if ( ! $post || $this->get_post_type() !== $post->post_type ) {
+				throw new Exception( 'Invalid post type.' );
+			}
+		}
+
+		if ( ! $post ) {
+			throw new Exception( 'Invalid post.' );
 		}
 
 		$this->id = $post->ID;
@@ -46,9 +54,11 @@ abstract class Post implements Apiable {
 	/**
 	 * Get the class for this post type.
 	 *
-	 * @return class-string<Post_Type>
+	 * @return class-string<Post_Type>|null
 	 */
-	abstract public static function get_post_type_class(): string;
+	public static function get_post_type_class(): ?string {
+		return Post_Type::class;
+	}
 
 	/**
 	 * Get this item's post type object.
@@ -73,7 +83,7 @@ abstract class Post implements Apiable {
 	 *
 	 * @return WP_Post
 	 */
-	public function get_post(): WP_Post {
+	public function get_wp_post(): WP_Post {
 		return get_post( $this->id );
 	}
 
@@ -166,6 +176,37 @@ abstract class Post implements Apiable {
 	 */
 	public function get_content(): string {
 		return get_the_content( $this->id );
+	}
+
+	/**
+	 * Get the parent of this post.
+	 *
+	 * @return ?Post
+	 */
+	public function get_parent(): ?Post {
+		$post = get_post_parent( $this->id );
+
+		if ( ! $post ) {
+			return null;
+		}
+
+		return new static( $post );
+	}
+
+	/**
+	 * Get the ancestors of this post.
+	 *
+	 * @return Collection<Post>
+	 */
+	public function get_ancestors(): Collection {
+		$ancestor_ids = get_ancestors( $this->id );
+		$collection   = new Collection();
+
+		foreach ( $ancestor_ids as $id ) {
+			$collection->add( new static( $id ) );
+		}
+
+		return $collection;
 	}
 
 	/**
@@ -307,6 +348,11 @@ abstract class Post implements Apiable {
 			return $this->get_meta_field( $key );
 		}
 
+		/**
+		 * Provided by ACF.
+		 *
+		 * @disregard P1010
+		 */
 		return get_field( $key, $this->id );
 	}
 
@@ -326,9 +372,34 @@ abstract class Post implements Apiable {
 
 		$previous_value = $this->get_acf_field( $field );
 
+		/**
+		 * Provided by ACF.
+		 *
+		 * @disregard P1010
+		 */
 		update_field( $field, $value, $this->id );
 
 		return $previous_value;
+	}
+
+	/**
+	 * Get the post slug.
+	 *
+	 * @return string
+	 */
+	public function get_slug(): string {
+		return $this->get_wp_post()->post_name;
+	}
+
+	/**
+	 * Get the post route.
+	 *
+	 * This is the slug, prefixed with any parent slugs.
+	 *
+	 * @return string
+	 */
+	public function get_route(): string {
+		return str_replace( home_url(), '', $this->get_permalink() );
 	}
 
 	/**
@@ -473,5 +544,29 @@ abstract class Post implements Apiable {
 		}
 
 		return new static( $id );
+	}
+
+	/**
+	 * Get a post.
+	 *
+	 * @param int|null|WP_Post|static|Post $post The post to get, or the default post if null.
+	 *
+	 * @return ?static
+	 */
+	public static function get_post( int|null|WP_Post|Post $post ): ?static {
+		if ( is_a( $post, static::class ) ) {
+			return $post;
+		}
+
+		if ( is_a( $post, self::class ) ) {
+			return new static( $post->get_id() );
+		}
+
+		if ( null === $post && ! get_post() ) {
+			// No global post to return.
+			return null;
+		}
+
+		return new static( $post );
 	}
 }
