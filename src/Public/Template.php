@@ -7,6 +7,7 @@
 
 namespace Wrd\WpObjective\Public;
 
+use Exception;
 use Wrd\WpObjective\Foundation\Service_Provider;
 use Wrd\WpObjective\Support\Condition;
 
@@ -29,37 +30,13 @@ abstract class Template extends Service_Provider {
 	abstract public function get_files(): array;
 
 	/**
-	 * Get the title for the page.
+	 * Get the template's file.
 	 *
 	 * @return string
-	 */
-	abstract public function get_title(): string;
-
-	/**
-	 * Boot the template.
 	 *
-	 * @return void
+	 * @throws Exception If not file is foumd.
 	 */
-	public function boot(): void {
-		add_filter( 'template_include', array( $this, 'include_callback' ), 10, 1 );
-		add_filter( 'pre_handle_404', array( $this, 'handle_404_callback' ) );
-		add_filter( 'document_title_parts', array( $this, 'title_callback' ) );
-	}
-
-	/**
-	 * Used to include the template.
-	 *
-	 * @param string $current_template The current selected template.
-	 *
-	 * @return string
-	 */
-	public function include_callback( string $current_template ): string {
-		$condition = $this->get_conditions();
-
-		if ( ! Condition::check( $condition, 'all' ) ) {
-			return $current_template;
-		}
-
+	public function get_file(): string {
 		/**
 		 * We check if the exact files given exist.
 		 * This allows us to use files from plugins.
@@ -73,24 +50,42 @@ abstract class Template extends Service_Provider {
 			}
 		}
 
-		return $current_template;
+		throw new Exception( 'No file exists for template.' );
 	}
 
 	/**
-	 * Prevents WordPress from returing a 404 error for template pages.
+	 * Get the title for the page.
 	 *
-	 * @param bool $preempt Current value.
-	 *
-	 * @return bool
+	 * @return string
 	 */
-	public function handle_404_callback( bool $preempt ): bool {
-		$condition = $this->get_conditions();
+	abstract public function get_title(): string;
 
-		if ( ! Condition::check( $condition, 'all' ) ) {
-			return $preempt;
-		}
+	/**
+	 * Run in the 'init' hook.
+	 *
+	 * @return void
+	 */
+	public function init(): void {
+		// Wait until the query is parsed as our conditions may rely on it.
+		add_action(
+			'wp',
+			function () {
+				if ( Condition::check( $this->get_conditions(), 'all' ) ) {
+					$this->include();
+				}
+			}
+		);
+	}
 
-		return true;
+	/**
+	 * Include the template directly.
+	 *
+	 * @return void
+	 */
+	public function include(): void {
+		add_filter( 'template_include', array( $this, 'get_file' ), 10, 0 );
+		add_filter( 'pre_handle_404', '__return_true' );
+		add_filter( 'document_title_parts', array( $this, 'title_callback' ) );
 	}
 
 	/**
