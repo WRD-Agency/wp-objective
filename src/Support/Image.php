@@ -113,6 +113,14 @@ class Image implements Apiable {
 			);
 		}
 
+		$full_src      = wp_get_attachment_image_src( $this->id, 'full', false );
+		$sizes['full'] = array(
+			'url'    => $full_src[0],
+			'width'  => $full_src[1],
+			'height' => $full_src[2],
+			'crop'   => $full_src[3],
+		);
+
 		return $sizes;
 	}
 
