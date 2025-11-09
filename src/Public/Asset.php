@@ -91,21 +91,31 @@ abstract class Asset extends Service_Provider {
 	 * @return bool
 	 */
 	public function register(): bool {
+		switch ( $this->get_type() ) {
+			case 'script':
+				$success = wp_register_script( $this->get_handle(), $this->get_url(), $this->get_dependencies(), $this->get_version(), array( 'strategy' => 'defer' ) );
+				break;
+
+			case 'style':
+				$success = wp_register_style( $this->get_handle(), $this->get_url(), $this->get_dependencies(), $this->get_version() );
+				break;
+
+			default:
+				$success = false;
+				break;
+		}
+
 		if ( 'script' === $this->get_type() ) {
 			foreach ( $this->get_data() as $key => $value ) {
-				wp_add_inline_script( $this->get_handle(), sprintf( 'window["%s"] = $s', esc_js( $key ), json_encode( $value ) ), 'before' );
+				wp_add_inline_script(
+					$this->get_handle(),
+					sprintf( 'window["%s"] = %s', esc_js( $key ), wp_json_encode( $value ) ),
+					'before'
+				);
 			}
 		}
 
-		switch ( $this->get_type() ) {
-			case 'script':
-				return wp_register_script( $this->get_handle(), $this->get_url(), $this->get_dependencies(), $this->get_version(), array( 'strategy' => 'defer' ) );
-
-			case 'style':
-				return wp_register_style( $this->get_handle(), $this->get_url(), $this->get_dependencies(), $this->get_version() );
-		}
-
-		return false;
+		return $success;
 	}
 
 	/**
