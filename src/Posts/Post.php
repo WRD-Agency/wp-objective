@@ -125,11 +125,15 @@ class Post implements Apiable {
 	 * @return static
 	 */
 	public function set_status( string|Post_Status $status ): static {
+		do_action( 'objective/post/before_set_status', $this, $status );
+
 		$this->update(
 			array(
 				'post_status' => is_string( $status ) ? $status : $status->get_name(),
 			)
 		);
+
+		do_action( 'objective/post/after_set_status', $this, $status );
 
 		Log::add(
 			message: __( 'Status updated', 'wrd' ),
@@ -248,6 +252,8 @@ class Post implements Apiable {
 		list( $type, $field ) = explode( '/', $key, 2 );
 		$previous             = null;
 
+		do_action( 'objective/post/before_update_field', $this, $key, $value );
+
 		switch ( $type ) {
 			case 'post':
 				$previous = $this->update_post_field( $field, $value );
@@ -261,6 +267,8 @@ class Post implements Apiable {
 			default:
 				throw new Exception( 'Unknown field type: ' . esc_html( $type ) );
 		}
+
+		do_action( 'objective/post/after_update_field', $this, $key, $value, $previous );
 
 		Log::add(
 			message: __( 'Field updated', 'wrd' ),
@@ -477,7 +485,11 @@ class Post implements Apiable {
 
 		$postdata['ID'] = $this->id;
 
+		do_action( 'objective/post/before_update', $this, $postdata );
+
 		wp_update_post( $postdata );
+
+		do_action( 'objective/post/after_update', $this, $postdata );
 
 		return $this;
 	}
@@ -498,7 +510,13 @@ class Post implements Apiable {
 			)
 		);
 
-		return (bool) wp_delete_post( $this->id, $force );
+		do_action( 'objective/post/before_delete', $this );
+
+		$success = (bool) wp_delete_post( $this->id, $force );
+
+		do_action( 'objective/post/after_delete', $this );
+
+		return $success;
 	}
 
 	/**
