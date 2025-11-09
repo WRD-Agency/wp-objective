@@ -29,12 +29,21 @@ abstract class Template extends Service_Provider {
 	abstract public function get_files(): array;
 
 	/**
+	 * Get the title for the page.
+	 *
+	 * @return string
+	 */
+	abstract public function get_title(): string;
+
+	/**
 	 * Boot the template.
 	 *
 	 * @return void
 	 */
 	public function boot(): void {
 		add_filter( 'template_include', array( $this, 'include_callback' ), 10, 1 );
+		add_filter( 'pre_handle_404', array( $this, 'handle_404_callback' ) );
+		add_filter( 'document_title_parts', array( $this, 'title_callback' ) );
 	}
 
 	/**
@@ -65,5 +74,41 @@ abstract class Template extends Service_Provider {
 		}
 
 		return $current_template;
+	}
+
+	/**
+	 * Prevents WordPress from returing a 404 error for template pages.
+	 *
+	 * @param bool $preempt Current value.
+	 *
+	 * @return bool
+	 */
+	public function handle_404_callback( bool $preempt ): bool {
+		$condition = $this->get_conditions();
+
+		if ( ! Condition::check( $condition, 'all' ) ) {
+			return $preempt;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Filters the parts of the document title.
+	 *
+	 * @param array $title The document title parts.
+	 *
+	 * @return array
+	 */
+	public function title_callback( $title ) {
+		$condition = $this->get_conditions();
+
+		if ( ! Condition::check( $condition, 'all' ) ) {
+			return $title;
+		}
+
+		$title['title'] = $this->get_title();
+
+		return $title;
 	}
 }
