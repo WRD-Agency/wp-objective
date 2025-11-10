@@ -24,63 +24,63 @@ class Address implements Apiable {
 	 *
 	 * @var ?string
 	 */
-	private ?string $address_line_1;
+	public ?string $address_line_1;
 
 	/**
 	 * Address line 2.
 	 *
 	 * @var ?string
 	 */
-	private ?string $address_line_2;
+	public ?string $address_line_2;
 
 	/**
 	 * Address line 3.
 	 *
 	 * @var ?string
 	 */
-	private ?string $address_line_3;
+	public ?string $address_line_3;
 
 	/**
 	 * The first administrative level in the address. This is typically the province in which the address is located. In the United States, this would be the state. In Switzerland, the canton. In the United Kingdom, the county.
 	 *
 	 * @var ?string
 	 */
-	private ?string $administrative_level_1;
+	public ?string $administrative_level_1;
 
 	/**
 	 * The second administrative level, in addresses with at least two of them. In countries with two administrative levels, this would typically be the city, town, village, or other locality in which the address is located.
 	 *
 	 * @var ?string
 	 */
-	private ?string $administrative_level_2;
+	public ?string $administrative_level_2;
 
 	/**
 	 * A country or territory code.
 	 *
 	 * @var ?string
 	 */
-	private ?string $country_code;
+	public ?string $country_code;
 
 	/**
 	 * A postal code (in the United States, this is the ZIP code).
 	 *
 	 * @var ?string
 	 */
-	private ?string $postal_code;
+	public ?string $postal_code;
 
 	/**
 	 * The latitude of this address.
 	 *
 	 * @var ?string
 	 */
-	private ?string $lat = null;
+	public ?string $lat = null;
 
 	/**
 	 * The longitude of this address.
 	 *
 	 * @var ?string
 	 */
-	private ?string $long = null;
+	public ?string $long = null;
 
 	/**
 	 * Create a new address.
