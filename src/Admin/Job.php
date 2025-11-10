@@ -42,16 +42,14 @@ abstract class Job extends Service_Provider {
 	abstract public function every(): Schedule;
 
 	/**
-	 * Execute the action.
+	 * Execute the job.
 	 *
-	 * @param array $args The arguments passed to the action.
-	 *
-	 * @return WP_Error|null
+	 * @return void
 	 */
-	abstract public function handle( array $args ): WP_Error|null;
+	abstract public function handle(): void;
 
 	/**
-	 * Boot the action.
+	 * Boot the job.
 	 *
 	 * @return void
 	 */

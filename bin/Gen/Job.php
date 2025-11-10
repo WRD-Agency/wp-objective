@@ -29,16 +29,11 @@ class CLASS_NAME extends Job {
 	}
 
 	/**
-	 * Execute the action.
+	 * Execute the job.
 	 *
-	 * @param array $args The arguments passed to the action.
-	 *
-	 * @return WP_Error|null
+	 * @return void
 	 */
-	public function handle( array $args ): WP_Error|null {
-
+	public function handle(): void {
 		// Execute your job here.
-
-		return new WP_Error( 'not_implemented', __( 'This action is not implemented yet.' ) );
 	}
 }
