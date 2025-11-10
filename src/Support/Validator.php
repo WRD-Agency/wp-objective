@@ -132,12 +132,12 @@ class Validator {
 		$invalid_details = array();
 
 		foreach ( $values as $key => $value ) {
-			if ( ! isset( $args[ $key ] ) ) {
+			if ( ! isset( $this->property_schema[ $key ] ) ) {
 				// Unknown parameter, skip it.
 				continue;
 			}
 
-			$param_args = $args[ $key ];
+			$param_args = $this->property_schema[ $key ];
 
 			// If the arg has a type but no sanitize_callback attribute, default to rest_sanitize_value_from_schema.
 			if ( ! array_key_exists( 'sanitize_callback', $param_args ) && ! empty( $param_args['type'] ) ) {
@@ -154,6 +154,7 @@ class Validator {
 
 			// If there's no sanitize_callback, nothing to do here.
 			if ( empty( $param_args['sanitize_callback'] ) ) {
+				$sanitized_values[ $key ] = $value;
 				continue;
 			}
 
