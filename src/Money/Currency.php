@@ -155,7 +155,7 @@ class Currency implements Apiable {
 	 * @return string
 	 */
 	public function format( int $amount ): string {
-		$float     = floor( $amount / pow( 10, $this->decimals ) );
+		$float     = $amount / pow( 10, $this->decimals );
 		$formatted = number_format( $float, $this->decimals, $this->decimal_separator, $this->thousands_separator );
 
 		if ( 'before' === $this->symbol_position ) {
