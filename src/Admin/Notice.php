@@ -80,12 +80,30 @@ abstract class Notice extends Service_Provider {
 			return;
 		}
 
-		wp_admin_notice(
-			$this->get_display(),
-			array(
-				'type' => $this->get_type(),
-				'id'   => $this->get_id(),
-			)
-		);
+		if ( get_current_screen()->is_block_editor() ) {
+			$notice_format = "
+<script type=\"module\">
+( function ( wp ) {
+    wp.data.dispatch( 'core/notices' ).createNotice(
+        '%s', // Status, one of: success, info, warning, error.
+        '%s', // Notice message.
+        {
+            isDismissible: true,
+			id: '%s'
+        }
+    );
+} )( window.wp )
+</script>";
+
+			printf( $notice_format, esc_js( $this->get_type() ), esc_js( $this->get_display() ), esc_js( $this->get_id() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped string literal.
+		} else {
+			wp_admin_notice(
+				$this->get_display(),
+				array(
+					'type' => $this->get_type(),
+					'id'   => $this->get_id(),
+				)
+			);
+		}
 	}
 }
