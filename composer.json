@@ -1,6 +1,6 @@
 {
 	"name": "wrd/wp-objective",
-	"version": "1.2.6",
+	"version": "1.2.7",
 	"description": "A set of classes for building consistent WordPress plugins.",
 	"type": "library",
 	"license": "MIT",
