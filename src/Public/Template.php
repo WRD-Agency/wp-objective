@@ -77,6 +77,21 @@ abstract class Template extends Service_Provider {
 		);
 
 		add_filter(
+			'status_header',
+			function ( string $status_header, int $code, string $description, string $protocol ) {
+				if ( Condition::check( $this->get_conditions(), 'all' ) ) {
+					// Prevent 404.
+					$code          = 200;
+					$status_header = "$protocol $code $description";
+				}
+
+				return $status_header;
+			},
+			10,
+			4
+		);
+
+		add_filter(
 			'pre_handle_404',
 			function ( $value ) {
 				if ( Condition::check( $this->get_conditions(), 'all' ) ) {
