@@ -75,6 +75,18 @@ abstract class Template extends Service_Provider {
 				}
 			}
 		);
+
+		add_filter(
+			'pre_handle_404',
+			function ( $value ) {
+				if ( Condition::check( $this->get_conditions(), 'all' ) ) {
+					// Prevent 404.
+					return true;
+				}
+
+				return $value;
+			}
+		);
 	}
 
 	/**
@@ -84,7 +96,6 @@ abstract class Template extends Service_Provider {
 	 */
 	public function include(): void {
 		add_filter( 'template_include', array( $this, 'get_file' ), 10, 0 );
-		add_filter( 'pre_handle_404', '__return_true' );
 		add_filter( 'document_title_parts', array( $this, 'title_callback' ) );
 	}
 
