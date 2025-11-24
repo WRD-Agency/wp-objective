@@ -51,7 +51,7 @@ class Validator {
 		foreach ( $this->property_schema as $key => $arg ) {
 			$is_required = isset( $arg['required'] ) && true === $arg['required'];
 
-			if ( $is_required && ! isset( $values[ $key ] ) || null === $values[ $key ] ) {
+			if ( $is_required && ( ! isset( $values[ $key ] ) || null === $values[ $key ] ) ) {
 				$required[] = $key;
 			}
 		}
