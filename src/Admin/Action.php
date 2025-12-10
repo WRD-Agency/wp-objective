@@ -131,7 +131,7 @@ abstract class Action extends Service_Provider {
 		);
 
 		foreach ( $this->get_arguments() as $key => $args ) {
-			if ( isset( $args['log'] ) && true === $args['log'] ) {
+			if ( isset( $args['log'] ) && true === $args['log'] && array_key_exists( $key, $values ) ) {
 				$loggable_args[ $key ] = $values[ $key ];
 			}
 		}
