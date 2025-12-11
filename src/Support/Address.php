@@ -128,12 +128,12 @@ class Address implements Apiable {
 			$components[] = $this->address_line_3;
 		}
 
-		if ( $this->administrative_level_1 ) {
-			$components[] = $this->administrative_level_1;
-		}
-
 		if ( $this->administrative_level_2 ) {
 			$components[] = $this->administrative_level_2;
+		}
+
+		if ( $this->administrative_level_1 ) {
+			$components[] = $this->administrative_level_1;
 		}
 
 		if ( $this->country_code ) {
