@@ -30,6 +30,15 @@ abstract class Template extends Service_Provider {
 	abstract public function get_files(): array;
 
 	/**
+	 * Get the status code for this template.
+	 *
+	 * @return int
+	 */
+	public function get_status_code(): int {
+		return 200;
+	}
+
+	/**
 	 * Get the template's file.
 	 *
 	 * @return string
@@ -81,7 +90,7 @@ abstract class Template extends Service_Provider {
 			function ( string $status_header, int $code, string $description, string $protocol ) {
 				if ( Condition::check( $this->get_conditions(), 'all' ) ) {
 					// Prevent 404.
-					$code          = 200;
+					$code          = $this->get_status_code();
 					$status_header = "$protocol $code $description";
 				}
 
