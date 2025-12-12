@@ -125,6 +125,10 @@ class Log implements JsonSerializable {
 			// Unlike errors, there can be no way to recover.
 			$this->status = Status::FATAL;
 		}
+
+		if ( $message->get_level() === Level::ERROR && $this->status !== Status::FATAL ) {
+			$this->status = Status::ERROR;
+		}
 	}
 
 	/**
