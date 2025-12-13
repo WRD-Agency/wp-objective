@@ -93,9 +93,9 @@ class Response {
 	/**
 	 * Get the response body as JSON.
 	 *
-	 * @return array
+	 * @return mixed
 	 */
-	public function get_body_json(): array {
+	public function get_body_json(): mixed {
 		return json_decode( $this->body, true );
 	}
 
