@@ -96,7 +96,7 @@ abstract class Route extends Service_Provider {
 						}
 
 						$this->logger->add(
-							level: Level::ERROR,
+							level: Level::WARN,
 							message: __( 'API request handler hit an error.', 'wrd' ),
 							data: array(
 								'error'  => $response,

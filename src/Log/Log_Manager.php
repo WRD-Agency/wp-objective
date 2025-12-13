@@ -71,10 +71,12 @@ class Log_Manager extends Service_Provider {
 	 *
 	 * @param WP_Error $error The error.
 	 *
+	 * @param Level    $level The error level.
+	 *
 	 * @return void
 	 */
-	public function add_wp_error( WP_Error $error ): void {
-		$this->get_current_log()->append( Log_Message::from_wp_error( $error ) );
+	public function add_wp_error( WP_Error $error, Level $level = Level::ERROR ): void {
+		$this->get_current_log()->append( Log_Message::from_wp_error( $error, $level ) );
 	}
 
 	// TODO: Querying Log_Managers.

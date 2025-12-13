@@ -8,6 +8,7 @@
 namespace Wrd\WpObjective\Http;
 
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Log\Level;
 use Wrd\WpObjective\Log\Log_Manager;
 
 /**
@@ -136,7 +137,7 @@ abstract class Client extends Service_Provider {
 		$response = wp_remote_request( $request->get_url(), $args );
 
 		if ( is_wp_error( $response ) ) {
-			$this->logger->add_wp_error( $response );
+			$this->logger->add_wp_error( $response, Level::ERROR );
 			return new Response( 503, array(), '' );
 		}
 

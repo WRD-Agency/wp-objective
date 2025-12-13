@@ -126,7 +126,7 @@ class Log implements JsonSerializable {
 			$this->status = Status::FATAL;
 		}
 
-		if ( $message->get_level() === Level::ERROR && $this->status !== Status::FATAL ) {
+		if ( $message->get_level() === Level::ERROR && Status::FATAL !== $this->status ) {
 			$this->status = Status::ERROR;
 		}
 	}

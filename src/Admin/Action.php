@@ -9,6 +9,7 @@ namespace Wrd\WpObjective\Admin;
 
 use WP_Error;
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Log\Level;
 use Wrd\WpObjective\Log\Log_Manager;
 use Wrd\WpObjective\Support\Validator;
 
@@ -91,7 +92,7 @@ abstract class Action extends Service_Provider {
 
 		if ( is_wp_error( $capability_check ) ) {
 			// User is not allowed to do this.
-			$this->logger->add_wp_error( $capability_check );
+			$this->logger->add_wp_error( $capability_check, Level::WARN );
 			wp_die( $capability_check ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
@@ -104,7 +105,7 @@ abstract class Action extends Service_Provider {
 
 		if ( is_wp_error( $values ) ) {
 			// Values could not be sanitized.
-			$this->logger->add_wp_error( $values );
+			$this->logger->add_wp_error( $values, Level::WARN );
 			wp_die( $values ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
@@ -113,7 +114,7 @@ abstract class Action extends Service_Provider {
 
 		if ( is_wp_error( $is_valid ) ) {
 			// Values did not validate.
-			$this->logger->add_wp_error( $is_valid );
+			$this->logger->add_wp_error( $is_valid, Level::WARN );
 			wp_die( $is_valid ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 
@@ -122,7 +123,7 @@ abstract class Action extends Service_Provider {
 
 		if ( is_wp_error( $result ) ) {
 			// Execution resulted in an error.
-			$this->logger->add_wp_error( $result );
+			$this->logger->add_wp_error( $result, Level::ERROR );
 			wp_die( $result ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP_Error handled by wp_die.
 		}
 

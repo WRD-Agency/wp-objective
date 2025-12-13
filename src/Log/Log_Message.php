@@ -187,11 +187,13 @@ class Log_Message implements JsonSerializable {
 	 *
 	 * @param WP_Error $error The error.
 	 *
+	 * @param Level    $level The error level.
+	 *
 	 * @return Log_Message
 	 */
-	public static function from_wp_error( WP_Error $error ): Log_Message {
+	public static function from_wp_error( WP_Error $error, Level $level = Level::ERROR ): Log_Message {
 		return new Log_Message(
-			level: Level::ERROR,
+			level: $level,
 			message: $error->get_error_message(),
 			data: $error->get_error_data() ?? array(),
 		);
