@@ -112,9 +112,11 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param Request $request The request.
 	 *
+	 * @param array   $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	private function dispatch( Request $request ): Response {
+	private function dispatch( Request $request, array $args = array() ): Response {
 		$this->logger->add(
 			message: __( 'Started HTTP request.', 'wrd' ),
 			data: array(
@@ -123,10 +125,8 @@ abstract class Client extends Service_Provider {
 			)
 		);
 
-		$args = array(
-			'method'  => $request->get_method()->value,
-			'headers' => $request->get_headers(),
-		);
+		$args['method']  = $request->get_method()->value;
+		$args['headers'] = $request->get_headers();
 
 		if ( $request->get_body() && ! $request->get_method()->has_url_params() ) {
 			$body                            = $request->get_body();
@@ -164,11 +164,13 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param array  $params Parameters to add to the request.
 	 *
+	 * @param array  $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	public function get( string $path, array $params = array() ): Response {
+	public function get( string $path, array $params = array(), array $args = array() ): Response {
 		$request = $this->create_request( Method::GET, $path, $params );
-		return $this->dispatch( $request );
+		return $this->dispatch( $request, $args );
 	}
 
 	/**
@@ -178,11 +180,13 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param array  $params Parameters to add to the request.
 	 *
+	 * @param array  $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	public function post( string $path, array $params = array() ): Response {
+	public function post( string $path, array $params = array(), array $args = array() ): Response {
 		$request = $this->create_request( Method::POST, $path, $params );
-		return $this->dispatch( $request );
+		return $this->dispatch( $request, $args );
 	}
 
 	/**
@@ -192,11 +196,13 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param array  $params Parameters to add to the request.
 	 *
+	 * @param array  $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	public function put( string $path, array $params = array() ): Response {
+	public function put( string $path, array $params = array(), array $args = array() ): Response {
 		$request = $this->create_request( Method::PUT, $path, $params );
-		return $this->dispatch( $request );
+		return $this->dispatch( $request, $args );
 	}
 
 	/**
@@ -206,11 +212,13 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param array  $params Parameters to add to the request.
 	 *
+	 * @param array  $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	public function delete( string $path, array $params = array() ): Response {
+	public function delete( string $path, array $params = array(), array $args = array() ): Response {
 		$request = $this->create_request( Method::DELETE, $path, $params );
-		return $this->dispatch( $request );
+		return $this->dispatch( $request, $args );
 	}
 
 	/**
@@ -220,10 +228,12 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @param array  $params Parameters to add to the request.
 	 *
+	 * @param array  $args Optional. Arguments for `wp_remote_request`.
+	 *
 	 * @return Response
 	 */
-	public function patch( string $path, array $params = array() ): Response {
+	public function patch( string $path, array $params = array(), array $args = array() ): Response {
 		$request = $this->create_request( Method::PATCH, $path, $params );
-		return $this->dispatch( $request );
+		return $this->dispatch( $request, $args );
 	}
 }
