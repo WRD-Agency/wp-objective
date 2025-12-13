@@ -128,7 +128,7 @@ abstract class Client extends Service_Provider {
 			'headers' => $request->get_headers(),
 		);
 
-		if ( ! empty( $request->body ) && ! $request->get_method()->has_url_params() ) {
+		if ( $request->get_body() && ! $request->get_method()->has_url_params() ) {
 			$body                            = $request->get_body();
 			$args['body']                    = is_array( $body ) ? wp_json_encode( $body ) : $body;
 			$args['headers']['Content-Type'] = 'application/json';
