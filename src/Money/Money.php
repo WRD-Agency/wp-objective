@@ -86,7 +86,7 @@ class Money implements Apiable {
 	 * @return float
 	 */
 	public function get_float_amount(): float {
-		return (float) $this->get_amount() / $this->currency->get_decimals();
+		return (float) $this->get_amount() / pow( 10, $this->currency->get_decimals() );
 	}
 
 	/**
