@@ -112,6 +112,19 @@ class Email {
 	}
 
 	/**
+	 * Add raw content to the email body.
+	 *
+	 * @param string $html The content to add.
+	 *
+	 * @return self
+	 */
+	public function raw( $html ) {
+		$this->body .= $html;
+
+		return $this;
+	}
+
+	/**
 	 * Add a heading to the email body.
 	 *
 	 * @param int    $level The heading level. 1-4 are supported.
