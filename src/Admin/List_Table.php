@@ -7,7 +7,9 @@
 
 namespace Wrd\WpObjective\Admin;
 
+use WP_Query;
 use Wrd\WpObjective\Foundation\Service_Provider;
+use Wrd\WpObjective\Support\Collection;
 
 /**
  * Class for managing admin list tables.
@@ -36,7 +38,7 @@ abstract class List_Table extends Service_Provider {
 
 		add_filter(
 			"manage_{$this->get_post_type()}_posts_columns",
-			function( array $posts_columns ) use ( $id, $title ) {
+			function ( array $posts_columns ) use ( $id, $title ) {
 				$posts_columns[ $id ] = $title;
 				return $posts_columns;
 			}
@@ -44,7 +46,7 @@ abstract class List_Table extends Service_Provider {
 
 		add_action(
 			"manage_{$this->get_post_type()}_posts_custom_column",
-			function( string $column, int $post_id ) use ( $id, $callback ) {
+			function ( string $column, int $post_id ) use ( $id, $callback ) {
 				if ( $column !== $id ) {
 					return;
 				}
@@ -66,13 +68,68 @@ abstract class List_Table extends Service_Provider {
 	public function remove_column( string $id ): void {
 		add_filter(
 			"manage_{$this->get_post_type()}_posts_columns",
-			function( array $posts_columns ) use ( $id ) {
+			function ( array $posts_columns ) use ( $id ) {
 				if ( array_key_exists( $id, $posts_columns ) ) {
 					unset( $posts_columns[ $id ] );
 				}
 
 				return $posts_columns;
 			}
+		);
+	}
+
+	/**
+	 * Add a filtering option to the table.
+	 *
+	 * @param string                             $name The name of the filter.
+	 *
+	 * @param array                              $values Dropdown options.
+	 *
+	 * @param callable(Collection, string): void $callback Callback to apply the filter.
+	 */
+	public function add_filter( string $name, array $values, callable $callback ): void {
+		add_action(
+			'restrict_manage_posts',
+			function () use ( $name, $values ) {
+				$screen = get_current_screen();
+
+				if ( 'edit-' . $this->get_post_type() !== $screen->id ) {
+					return;
+				}
+
+				$selected = isset( $_GET[ $name ] ) ? sanitize_text_field( $_GET[ $name ] ) : '';
+
+				printf( '<select name="%s">', esc_attr( $name ) );
+
+				foreach ( $values as $label => $value ) {
+					printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $selected, $value, false ), esc_html( $label ) );
+				}
+
+				echo '</select>';
+			}
+		);
+
+		add_filter(
+			'posts_results',
+			function ( array $posts, WP_Query $query ) use( $name, $values, $callback ) {
+				$screen = get_current_screen();
+
+				if ( 'edit-' . $this->get_post_type() !== $screen->id || ! $query->is_main_query() ) {
+					return $posts;
+				}
+
+				$value = isset( $_GET[ $name ] ) ? sanitize_text_field( $_GET[ $name ] ) : '';
+
+				if ( ! in_array( $value, $values, true ) ) {
+					return $posts;
+				}
+
+				$posts = call_user_func( $callback, Collection::from( $posts ), $value );
+
+				return $posts->all();
+			},
+			10,
+			2
 		);
 	}
 }
