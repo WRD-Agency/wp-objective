@@ -91,6 +91,10 @@ abstract class List_Table extends Service_Provider {
 		add_action(
 			'restrict_manage_posts',
 			function () use ( $name, $values ) {
+				if ( ! function_exists( 'get_current_screen' ) ) {
+					return;
+				}
+
 				$screen = get_current_screen();
 
 				if ( 'edit-' . $this->get_post_type() !== $screen->id ) {
@@ -112,6 +116,10 @@ abstract class List_Table extends Service_Provider {
 		add_filter(
 			'posts_results',
 			function ( array $posts, WP_Query $query ) use( $name, $values, $callback ) {
+				if ( ! function_exists( 'get_current_screen' ) ) {
+					return $posts;
+				}
+
 				$screen = get_current_screen();
 
 				if ( 'edit-' . $this->get_post_type() !== $screen->id || ! $query->is_main_query() ) {
