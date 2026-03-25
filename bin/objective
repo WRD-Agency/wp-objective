@@ -708,14 +708,6 @@ function main(): void {
 				}
 			)
 			->tap()
-		->command( 'gen:route', 'Not Implemented: Generate a new Route.' )
-			->arguments( '<name>' )
-			->action(
-				function ( string $name ) {
-					throw new Exception('Not Implemented.');
-				}
-			)
-			->tap()
 		->command( 'gen:template', 'Not Implemented: Generate a new Template.' )
 			->arguments( '<name>' )
 			->action(
