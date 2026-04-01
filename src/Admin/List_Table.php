@@ -128,7 +128,7 @@ abstract class List_Table extends Service_Provider {
 
 				$value = isset( $_GET[ $name ] ) ? sanitize_text_field( $_GET[ $name ] ) : '';
 
-				if ( ! in_array( $value, $values, true ) ) {
+				if ( ! in_array( $value, $values, true ) || ! $value ) {
 					return $posts;
 				}
 
