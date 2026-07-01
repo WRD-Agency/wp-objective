@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Contains the Client class.
  *
@@ -7,14 +8,20 @@
 
 namespace Wrd\WpObjective\Http;
 
+use WpOrg\Requests\Exception;
+use WpOrg\Requests\Requests;
 use Wrd\WpObjective\Foundation\Service_Provider;
 use Wrd\WpObjective\Log\Level;
 use Wrd\WpObjective\Log\Log_Manager;
+use Wrd\WpObjective\Support\Collection;
 
 /**
  * Base class for handling API clients.
  */
 abstract class Client extends Service_Provider {
+
+
+
 	/**
 	 * The logger.
 	 *
@@ -93,7 +100,7 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @return Request
 	 */
-	private function create_request( Method $method, string $path, array $params = array() ): Request {
+	public function create_request( Method $method, string $path, array $params = array() ): Request {
 		$request = new Request(
 			$this->get_url( $path, $method->has_url_params() ? $params : array() ),
 			$method,
@@ -116,7 +123,7 @@ abstract class Client extends Service_Provider {
 	 *
 	 * @return Response
 	 */
-	private function dispatch( Request $request, array $args = array() ): Response {
+	public function dispatch( Request $request, array $args = array() ): Response {
 		$this->logger->add(
 			message: __( 'Started HTTP request.', 'wrd' ),
 			data: array(
@@ -155,6 +162,73 @@ abstract class Client extends Service_Provider {
 		);
 
 		return $response;
+	}
+
+	/**
+	 * Dispatch multiple requests in parallel.
+	 *
+	 * @param Request[] $requests The requests.
+	 *
+	 * @param array     $args Optional. Arguments for `wp_remote_request`.
+	 *
+	 * @return Response[]
+	 */
+	public function dispatch_in_parallel( array $requests, array $args = array() ): array {
+		$raw_requests    = array();
+		$request_summary = array();
+
+		foreach ( $requests as $request ) {
+			$raw_requests[] = array(
+				'url'     => $request->get_url(),
+				'type'    => $request->get_method()->value,
+				'headers' => $request->get_headers(),
+				'data'    => $request->get_body(),
+			);
+
+			$request_summary[] = array(
+				'url'    => $request->get_url(),
+				'method' => $request->get_method()->value,
+			);
+		}
+
+		$this->logger->add(
+			message: __( 'Started parallel HTTP requests.', 'wrd' ),
+			data: $request_summary,
+		);
+
+		$raw_responses = Requests::request_multiple( $raw_requests, $args );
+		$responses     = array();
+
+		$this->logger->add(
+			message: __( 'Completed parallel HTTP request.', 'wrd' )
+		);
+
+		foreach ( $raw_responses as $response ) {
+			if ( is_wp_error( $response ) ) {
+				$this->logger->add_wp_error( $response, Level::ERROR );
+				$responses[] = new Response( 503, array(), '' );
+				continue;
+			} elseif ( is_a( $response, Exception::class ) ) {
+				$this->logger->add(
+					level: Level::ERROR,
+					message: __( 'Parallel HTTP request failed.', 'wrd' ),
+					data: array(
+						'code' => $response->getCode(),
+						'type' => $response->getType(),
+					)
+				);
+				$responses[] = new Response( 503, array(), '' );
+				continue;
+			}
+
+			$responses[] = new Response(
+				$response->status_code ? $response->status_code : 200,
+				(array) $response->headers,
+				$response->body,
+			);
+		}
+
+		return $responses;
 	}
 
 	/**
